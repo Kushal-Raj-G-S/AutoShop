@@ -1,0 +1,43 @@
+name: vendor_autoshop
+description: "Vendor AutoShop - Manage orders, dispatch, and grow your auto parts business"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.0-93.1.beta
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Core
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.1
+  shared_preferences: ^2.2.2
+  http: ^1.2.0
+  
+  # Real-time
+  socket_io_client: ^3.1.3
+  
+  # UI
+  cached_network_image: ^3.3.1
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  
+  # Location & Maps
+  geolocator: ^14.0.2
+  
+  # Image handling
+  image_picker: ^1.0.7
+  
+  # Path
+  path_provider: ^2.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

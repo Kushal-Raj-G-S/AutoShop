@@ -1,0 +1,192 @@
+⭐ CUSTOMER APP — EXACTLY WHAT IT MUST SHOW + DO
+
+Think “Swiggy consumer app”.
+Fast, clean, idiot-proof.
+
+1. Auth & Profile
+
+Shows:
+
+Phone number input
+
+OTP screen
+
+Profile info (name, phone, email)
+
+Address list
+
+Does:
+
+Login with OTP
+
+Add/Edit/Delete addresses
+
+2. Home & Catalog
+
+Shows:
+
+Categories
+
+Item cards (image, name, price, rating)
+
+Search bar
+
+Filters (brand, price, type)
+
+Does:
+
+Browse categories
+
+Search items
+
+Filter results
+
+View product details
+
+3. Product Details
+
+Shows:
+
+Images
+
+Price & description
+
+Item specifications
+
+Add to cart button
+
+Reviews
+
+Does:
+
+Add to cart
+
+Change quantity
+
+4. Cart
+
+Shows:
+
+List of items
+
+Quantity selector
+
+Total price
+
+Delivery address
+
+Delivery charges
+
+Does:
+
+Edit quantity
+
+Remove items
+
+Proceed to checkout
+
+5. Checkout
+
+Shows:
+
+Order summary
+
+Delivery address
+
+Payment options
+
+Coupon option
+
+Does:
+
+Complete payment
+
+Create order
+
+Redirect to success screen
+
+6. Order Tracking
+
+Shows:
+
+Order ID
+
+Vendor assigned (name, phone)
+
+Status timeline (placed → accepted → picked → delivered)
+
+Delivery ETA
+
+Map (optional)
+
+Does:
+
+Cancel order
+
+Contact vendor via chat
+
+7. Chat
+
+Shows:
+
+Chat with vendor
+
+Message history
+
+Does:
+
+Send/receive messages realtime
+
+8. Order History
+
+Shows:
+
+Past orders
+
+Total spent
+
+Order details
+
+Does:
+
+Reorder
+
+View invoice
+
+9. Notifications
+
+Shows:
+
+Order updates
+
+Vendor messages
+
+✔ That’s the customer app.
+Nothing more. Nothing less.
+
+
+🎯 What's Next (From Your Plan):
+Priority 1 - Address Management
+Add/edit/delete delivery addresses
+Set default address
+Address form with validation
+
+Priority 2 - Checkout Flow
+Order summary
+Address selection
+Payment options (COD/Online)
+Place order API
+
+Priority 3 - Order Tracking
+Order list with status
+Order details screen
+Timeline (placed → accepted → delivered)
+Vendor information
+
+Priority 4 - Advanced Features
+Search functionality
+Filters (price range, availability)
+Product reviews & ratings
+Order history
+Reorder functionality
+Real-time chat with vendor

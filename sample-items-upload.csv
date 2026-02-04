@@ -1,0 +1,11 @@
+name,sku,brand,categoryId,subCategory,description,price,tax,serviceTime,unitType,stock
+Oil Filter Premium,OF-001,Bosch,1,Filters,High quality oil filter for all vehicles,299,18,15,pcs,100
+Brake Pad Set Front,BP-F-001,Brembo,1,Brake Systems,Premium front brake pads,1299,18,30,pcs,50
+Air Filter Standard,AF-001,Mann,1,Filters,Standard air filter replacement,199,18,10,pcs,150
+Spark Plug Set,SP-001,NGK,1,Ignition,Set of 4 spark plugs,599,18,20,pcs,80
+Wiper Blade Pair,WB-001,Bosch,1,Accessories,Pair of windshield wiper blades,399,18,5,pcs,120
+Engine Oil 5W30,EO-001,Castrol,1,Lubricants,Synthetic engine oil 4L,1499,18,0,box,60
+Battery 12V 50Ah,BAT-001,Exide,1,Electrical,Car battery 12V 50Ah,3999,18,30,pcs,30
+Coolant Concentrate,CC-001,Prestone,1,Fluids,Engine coolant 1L,349,18,5,pcs,90
+Headlight Bulb H4,HB-001,Philips,1,Electrical,Halogen headlight bulb,249,18,10,pcs,200
+Tire 195/65R15,TR-001,Michelin,1,Tires,Premium radial tire,4999,18,45,pcs,40

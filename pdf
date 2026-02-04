@@ -1,0 +1,376 @@
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+Date: 27th Nov, 2025
+Requirement Specification — Auto-parts Marketplace & Vendor Dispatch App
+1. Overview
+Purpose: Build a lightweight cross-platform (iOS, Android, Windows) mobile app + admin web/desktop console that allows customers to browse and order auto-parts, vendors to accept & dispatch orders, and admin to manage inventory, vendors, payments and analytics. UI/UX should be inspired by Boodmo (clean catalog, parts categories, cart, vendor assignment flows) but not copied.
+Primary actors
+•
+Admin — full platform control (inventory, vendors, orders, payments, dashboard).
+•
+Customer — browses, orders parts, pays, tracks history, chats with vendor.
+•
+Vendor — registers store, receives nearby orders, accepts & dispatches, views own history.
+•
+Payment Gateway / Bank — handles payments to admin’s account.
+•
+System — notification, geolocation, matching engine, central DB, chat & realtime.
+2. High-level Functional Requirements
+2.1 Admin (Console / App)
+•
+FR-A1: Admin can upload inventory items (part name, SKU/part number, brand, category, sub-category, description, images, price, tax, service time / lead time, stock count, unit type: pcs|box|carton).
+•
+FR-A2: Admin can bulk upload (CSV/XLSX) and bulk edit inventory.
+•
+FR-A3: Admin can add/modify/delete vendors. Vendor profile includes store name, owner name, contact details, store address, store location coordinates (lat/long), pin code, service areas, bank details (for KYC), status (pending, approved, blocked).
+•
+FR-A4: Admin can moderate vendor registrations (approve/reject) and add notes/required documents. Only approved vendors are active.
+•
+FR-A5: Admin can view all customers’ orders and manually assign orders to vendors by proximity, or allow automatic assignment (configurable).
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+•
+FR-A6: Admin dashboard with KPIs and filters: orders, invoices, revenues, payouts, vendors, app downloads, inventory levels, user activity, returns/refunds, sales by category/brand/time period.
+•
+FR-A7: Admin can manage payment gateway account(s) and bank account settings for receiving funds (store merchant/account details).
+•
+FR-A8: Admin can block/unblock any customer or vendor account (immediate effect).
+•
+FR-A9: Admin can create and manage categories/sub-categories and units (pcs, box, carton).
+•
+FR-A10: Admin can view logs / activities and export reports (PDF) — orders, payouts, inventory, vendor.
+•
+FR-A11: Admin can configure system parameters: order timeout for vendor acceptance, proximity radius, automatic reassign rules, tax rates, shipping charges, coupon codes.
+2.2 Customer (Mobile App)
+•
+FR-C1: Customer installs app and registers with mobile number + OTP verification (SMS OTP). Optional: email.
+•
+FR-C2: Customer can search/browse categories, filter by brand, price, compatibility, delivery time.
+•
+FR-C3: Product detail page: images, price, unit, stock status, service time.
+•
+FR-C4: Add items to a shopping cart; adjust quantity and unit.
+•
+FR-C5: Customers can store multiple shipping addresses in address book (labelled home, work, garage, etc).
+•
+FR-C6: Checkout flow with selection of shipping address, payment option, order review, apply coupon code.
+•
+FR-C7: Payment via integrated payment gateway (cards, UPI, wallets, netbanking). Payments go to admin’s merchant account; system records transaction/invoice.
+•
+FR-C8: Order confirmation, order tracking (status updates), order history & invoices. Cancel / return request flow (policy governed).
+•
+FR-C9: Raise support issues for an order (text + attach photo). View status of issues.
+•
+FR-C10: Chat with assigned vendor (in-app chat) for order support. Chat is one-to-one between customer and assigned vendor only for that order.
+•
+FR-C11: Push notifications for OTP, order status updates, vendor messages, delivery ETA, invoice.
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+•
+FR-C12: Basic profile management (name, email, password, phone, language, notification preferences).
+•
+FR-C13: Rate and review the vendor service, product quality, on-time delivery.
+2.3 Vendor (Vendor App — cross-platform)
+•
+FR-V1: Vendor downloads app and registers providing: store name, store address, pin code, store map location (geolocation pin), contact person, phone, email, business hours, and documents for verification (GST, ID, bank proof).
+•
+FR-V2: Admin must moderate (approve) vendor registration before vendor becomes active.
+•
+FR-V3: Vendors see incoming orders from customers that are within their configured proximity/radius and within service time. Orders should show estimated route distance, delivery time, and order details.
+•
+FR-V4: Race condition rule: The first vendor to accept the order becomes assigned and the order disappears from other vendors’ lists immediately.
+•
+FR-V5: Vendors can accept/reject orders. If accepted, vendor must confirm dispatch and mark delivery milestones (picked up, en route, delivered).
+•
+FR-V6: Vendors see only their own order history and performance metrics (orders served, success rate, revenue).
+•
+FR-V7: Vendors can chat with the assigned customer (in-app), update ETA, and add delivery notes.
+•
+FR-V8: Vendors must be able to update item availability and stock (if they manage their own stock).
+•
+FR-V9: Vendors receive push notifications for new orders, cancellations, messages, payouts.
+•
+FR-V10: Vendors see payout/invoice statements
+•
+FR-V11: Analytics for vendors to see weekly sales statements, insights, avg. customer ratings.
+3. Key Business Rules & Workflows
+3.1 Order lifecycle (typical)
+1.
+Customer places order (cart -> checkout -> payment).
+2.
+System records order and marks it Pending Assignment with geolocation of delivery address.
+3.
+System finds vendors within radius (configurable) who are active and available.
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+4.
+System pushes real-time order notification to nearby vendors (queue).
+5.
+First Accept Wins: vendor presses Accept — system applies atomic lock (Redis or DB transaction) to set vendor_id on order. Order removed from other vendor queues.
+6.
+Vendor dispatches and updates status (Dispatched, Delivered). Customer and admin notified.
+7.
+Admin can reassign if vendor fails to dispatch within timeline or cancels.
+3.2 Vendor Proximity & Assignment Rules
+•
+Proximity radius configurable (km). Option: prefer vendors with faster average service time or higher rating.
+•
+If no vendor accepts within X minutes, escalate to admin for manual assignment, or broaden radius.
+•
+Admin override allowed.
+3.3 Payment & Settlement
+•
+Payments processed via Payment Gateway. Gateway webhooks notify app backend of success/failure.
+•
+Admin receives payments into platform merchant account. If vendor payouts are required, platform records payable to vendor and triggers periodic payouts (manual or scheduled).
+•
+Refunds managed in admin console (full or partial). Refund flow must reverse payment with gateway API and mark order refunded.
+4. Non-Functional Requirements (NFRs)
+•
+NFR-1 (Cross-Platform): Single codebase preferred. Support iOS, Android, Windows desktop.
+•
+NFR-2 (Lightweight): App install size minimal and efficient runtime memory usage.
+•
+NFR-3 (Centralized DB): Single central database (Postgres recommended) hosted in cloud (AWS/Azure/GCP).
+•
+NFR-4 (Realtime): Real-time features (order push & chat) via WebSocket (socket.io) or Firebase Realtime / FCM for notifications.
+•
+NFR-5 (Performance): API response < 300ms typical for catalog queries; scale to thousands of daily active users with horizontal scaling.
+•
+NFR-6 (Availability): 99.9% uptime SLA for core services.
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+•
+NFR-7 (Security): TLS everywhere, secure storage of secrets, PCI-DSS compliance for payment processing (gateway handles card data).
+•
+NFR-8 (Scalability): Use stateless app servers behind load balancer, autoscaling, CDN for images.
+•
+NFR-9 (Localization): Support English and regional language(s) (configurable).
+•
+NFR-10 (Audit): Full audit logs for admin actions.
+5. Data Model (Key Entities)
+(Provide simple table list — implementors will refine)
+•
+Users (user_id, phone, name, email, role [customer/vendor/admin], status, created_at)
+•
+Customers (user_id FK, default_address_id, addresses JSON)
+•
+Vendors (vendor_id, user_id, store_name, address, lat, long, pin_code, documents[], status, rating, service_areas)
+•
+Categories (category_id, parent_id, name, slug)
+•
+Items / Parts (item_id, sku, title, brand, category_id, subcategory_id, description, images[], price, tax, unit_type, stock_count, service_time, compatibility_tags)
+•
+InventoryLog (id, item_id, vendor_id|null, change_type, quantity, timestamp)
+•
+Orders (order_id, customer_id, vendor_id|null, status, total_amount, payment_status, shipping_address, created_at, assigned_at, delivered_at)
+•
+OrderItems (order_item_id, order_id, item_id, qty, unit_price, unit_type)
+•
+Payments (payment_id, order_id, amount, gateway_txn_id, status, created_at)
+•
+Chats (chat_id, order_id, from_user_id, to_user_id, message, attachments[], timestamp)
+•
+Payouts (payout_id, vendor_id, amount, status, scheduled_date)
+•
+AdminAuditLog (id, admin_id, action, details, timestamp)
+6. APIs (Sketch)
+Provide REST endpoints (versioned) + WebSocket channels for realtime.
+Auth
+•
+POST /v1/auth/request-otp { phone } → OTP sent
+•
+POST /v1/auth/verify-otp { phone, otp } → returns JWT
+Customer
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+•
+GET /v1/items query params (q, category, brand, page, filters)
+•
+GET /v1/items/{id}
+•
+POST /v1/cart (user cart ops)
+•
+POST /v1/orders { cart_id, address_id, payment_method }
+•
+GET /v1/orders/{id}
+•
+GET /v1/orders (history)
+•
+POST /v1/issues (order_id, message, attachments)
+•
+POST /v1/chat/{order_id}
+Vendor
+•
+POST /v1/vendor/register (store info + docs)
+•
+GET /v1/vendor/orders (incoming)
+•
+POST /v1/vendor/orders/{id}/accept
+•
+POST /v1/vendor/orders/{id}/status (dispatched, delivered)
+•
+GET /v1/vendor/history
+Admin
+•
+POST /v1/admin/items (create)
+•
+PUT /v1/admin/items/{id}
+•
+POST /v1/admin/vendors/{id}/approve
+•
+POST /v1/admin/orders/{id}/assign { vendor_id }
+•
+GET /v1/admin/dashboard (KPIs)
+•
+POST /v1/admin/payment-gateway (link accounts)
+•
+POST /v1/admin/block-user/{user_id}
+Realtime / Notifications
+•
+WebSocket namespace /orders for vendor order pushes
+•
+Push notifications via FCM/APNs for mobile
+7. Realtime / Concurrency Details (Critical)
+•
+Use atomic locking when vendor accepts an order (Redis SETNX or DB transaction with WHERE vendor_id IS NULL update). This ensures "first-accept-wins".
+•
+After assignment, broadcast update to all connected vendors so order is removed.
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+•
+For occasional race conditions, server must check assignment again before confirming to vendor and return appropriate status to losing vendors.
+8. Chat & Messaging
+•
+Lightweight in-app chat per order; messages stored in DB with attachments in object storage.
+•
+Use WebSocket for immediate delivery, fallback to push notifications.
+•
+Allow vendor/customer to see chat history only for orders they are part of.
+9. Payment Flow & Bank Management
+•
+Integrate with a PCI-compliant Payment Gateway (gateway handles card details). Support UPI, netbanking, cards, wallets.
+•
+Admin console to configure gateway credentials, webhook URL, settlement account (bank).
+•
+Record all transactions, webhooks must be idempotent (use gateway txn id).
+•
+Provide refunds via gateway APIs; admin triggers refund flow.
+10. Admin Dashboard Features
+•
+Real-time KPIs: Today’s orders, pending assignments, completed, cancellations, revenue, app downloads (from stores), active vendors & customers.
+•
+Filters by date range, vendor, category, city/pincode.
+•
+Inventory alerts (low stock), automatic reorder suggestions.
+•
+Export transactions / invoices / vendor statements.
+11. Security & Compliance
+•
+OTP verification, strong JWT tokens, refresh tokens with secure storage.
+•
+All APIs behind TLS. Secure headers (CSP, HSTS).
+•
+Role-based access control: admin vs vendor vs customer.
+•
+Input validation and rate limiting to prevent abuse.
+•
+If storing PII or operating in India, follow local data protection regulations and best practices.
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+•
+Payment card data: rely on gateway & do not store sensitive card data unless PCI scope is handled.
+12. Monitoring & Observability
+•
+App + API logging (structured logs). Centralized logging (ELK or Cloud equivalent).
+•
+Alerting on failures, payment webhook failures, database errors.
+13. Backup & Disaster Recovery
+•
+Daily DB backups; point-in-time recovery (PITR).
+•
+Backup retention policy (e.g., 30/90 days).
+14. Testing & QA
+•
+Unit tests for business logic.
+•
+API integration tests (orders & payment flows).
+•
+Load testing for peak order intake (simulate many vendors & customers).
+•
+UAT with sample vendors & customers.
+15. Acceptance Criteria (examples)
+•
+AC1: A customer can register using mobile number with OTP and place an order; payment success results in order present in admin console and vendor queue.
+•
+AC2: When multiple vendors receive same order, only the first vendor to accept is assigned; other vendors no longer see the order within 2 seconds.
+•
+AC3: Admin can add categories and upload 1,000 items via CSV in batch and they appear in catalog within expected time.
+•
+AC4: Vendors see only orders assigned to them and their own order history.
+•
+AC5: Customers can chat with assigned vendor and receive replies in realtime.
+16. Suggested Tech Stack & Services (recommendations)
+•
+Frontend mobile: Flutter (single codebase, supports iOS/Android/Windows desktop). Alternative: React Native + React Native Windows (less mature Windows support).
+Auto-parts Marketplace & Vendor Dispatch App
+Document Vesion: v1.1
+DeepCognix AI Labs Pvt. Ltd., CIN: U72100KA2025PTC203794 (DPIIT / MSME Certified)
+www.DeepCognix.com | deepcognix@gmail.com | 080-42041893
+•
+Backend: Node.js (Express / NestJS) or Python (FastAPI) — REST + WebSocket support.
+•
+Realtime: WebSocket (socket.io) or Firebase Realtime/Firestore for quick iteration. Use Redis for locks and pub/sub.
+•
+DB: PostgreSQL (centralized). Use Redis for ephemeral/locking/cache.
+•
+File storage: S3 (or cloud storage) for images & docs + CDN.
+•
+Auth/OTP: Twilio / MSG91 / AWS SNS (regional SMS provider) for OTP; or use Firebase Auth SMS if comfortable.
+•
+Payments: Integrate with Razorpay / Stripe / PayU / local gateway depending on country and settlement needs.
+•
+Push notifications: FCM (Android), APNs (iOS), Windows Notification Service (if on Windows).
+17. UX/UI Notes (Boodmo-inspired)
+•
+Clean product grid, rich filters (brand/compatibility/price/delivery time).
+•
+Product detail with compatibility (car make/model), images, OEM & aftermarket tags.
+•
+Quick reorder from history from saved profiles.
+•
+Lightweight onboarding; one-tap OTP login.
+•
+Map view for vendor coverage (optional) to show nearby vendors.
+18. Additional Enhancements
+•
+Multi-lingual support (English and Hindi)
+•
+Dark and Light Theme in App
+19. Deliverables (what to produce)
+•
+Functional spec (this doc).
+•
+Wireframes / interactive prototypes for customer, vendor & admin flows.
+•
+API specification (OpenAPI/Swagger).
+•
+Database schema & ER diagram.
+•
+QA test plans and acceptance test checklist.

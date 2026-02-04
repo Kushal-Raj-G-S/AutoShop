@@ -1,0 +1,442 @@
+⭐ CUSTOMER APP — EXACTLY WHAT IT MUST SHOW + DO
+
+Think “Swiggy consumer app”.
+Fast, clean, idiot-proof.
+
+1. Auth & Profile
+
+Shows:
+
+Phone number input
+
+OTP screen
+
+Profile info (name, phone, email)
+
+Address list
+
+Does:
+
+Login with OTP
+
+Add/Edit/Delete addresses
+
+2. Home & Catalog
+
+Shows:
+
+Categories
+
+Item cards (image, name, price, rating)
+
+Search bar
+
+Filters (brand, price, type)
+
+Does:
+
+Browse categories
+
+Search items
+
+Filter results
+
+View product details
+
+3. Product Details
+
+Shows:
+
+Images
+
+Price & description
+
+Item specifications
+
+Add to cart button
+
+Reviews
+
+Does:
+
+Add to cart
+
+Change quantity
+
+4. Cart
+
+Shows:
+
+List of items
+
+Quantity selector
+
+Total price
+
+Delivery address
+
+Delivery charges
+
+Does:
+
+Edit quantity
+
+Remove items
+
+Proceed to checkout
+
+5. Checkout
+
+Shows:
+
+Order summary
+
+Delivery address
+
+Payment options
+
+Coupon option
+
+Does:
+
+Complete payment
+
+Create order
+
+Redirect to success screen
+
+6. Order Tracking
+
+Shows:
+
+Order ID
+
+Vendor assigned (name, phone)
+
+Status timeline (placed → accepted → picked → delivered)
+
+Delivery ETA
+
+Map (optional)
+
+Does:
+
+Cancel order
+
+Contact vendor via chat
+
+7. Chat
+
+Shows:
+
+Chat with vendor
+
+Message history
+
+Does:
+
+Send/receive messages realtime
+
+8. Order History
+
+Shows:
+
+Past orders
+
+Total spent
+
+Order details
+
+Does:
+
+Reorder
+
+View invoice
+
+9. Notifications
+
+Shows:
+
+Order updates
+
+Vendor messages
+
+✔ That’s the customer app.
+Nothing more. Nothing less.
+
+⭐ VENDOR APP — EXACTLY WHAT IT MUST SHOW + DO
+
+Think “Swiggy Partner App” but simplified.
+
+1. Auth / Registration
+
+Shows:
+
+Business registration form
+
+Upload documents
+
+Store details
+
+Location picker
+
+Does:
+
+Submit vendor application
+
+Login via OTP
+
+Wait-for-approval screen
+
+2. Home Dashboard
+
+Shows:
+
+Today's orders count
+
+Pending orders
+
+Earnings summary
+
+Availability toggle (online/offline)
+
+3. Incoming Orders (Realtime)
+
+Shows:
+
+New order popup
+
+Items list
+
+Delivery address
+
+Order value
+
+ETA/distance
+
+Does:
+
+Accept
+
+Reject
+(Redis lock ensures first accept wins)
+
+4. Active Order Workflow
+
+Shows:
+
+Order details
+
+Customer address
+
+Route info
+
+Items
+
+Does:
+
+Mark:
+
+Accepted
+
+Packed
+
+Out for delivery
+
+Delivered
+
+Update notes if needed
+
+5. Chat
+
+Shows:
+
+Chat with customer
+
+Message history
+
+Does:
+
+Send/receive messages realtime
+
+6. Past Orders
+
+Shows:
+
+Completed orders
+
+Earnings per order
+
+Dates
+
+7. Vendor Profile
+
+Shows:
+
+Store info
+
+Rating
+
+Timing
+
+Does:
+
+Edit store details
+
+Edit availability
+
+8. Notifications
+
+Shows:
+
+New orders
+
+Customer messages
+
+Admin updates
+
+✔ That’s the vendor app.
+It should be ruthlessly simple because vendors don’t have time for nonsense.
+
+⭐ ADMIN PANEL — EXACTLY WHAT IT MUST SHOW + DO
+
+This is your Swiggy Admin Dashboard.
+
+1. Dashboard
+
+Shows:
+
+Total orders
+
+Total revenue
+
+Active vendors
+
+Top categories
+
+Daily/weekly stats
+
+2. Inventory Management
+
+Shows:
+
+Item list with filters
+
+Add/edit item form
+
+Upload images
+
+Category management
+
+Does:
+
+Add item
+
+Edit item
+
+Delete item
+
+Bulk upload
+
+3. Vendor Management
+
+Shows:
+
+Vendor list
+
+Registration requests
+
+Business details
+
+Documents uploaded
+
+Does:
+
+Approve vendor
+
+Reject vendor
+
+Block/unblock vendor
+
+Edit vendor details
+
+4. Customer Management
+
+Shows:
+
+Customer list
+
+Customer details
+
+Order history
+
+Does:
+
+Block/unblock customer
+
+5. Order Management
+
+Shows:
+
+All orders
+
+Status filters
+
+Customer & vendor details
+
+Does:
+
+Reassign vendor
+
+Refund
+
+Cancel order
+
+Change order status (override)
+
+6. System Config
+
+Shows:
+
+Radius settings
+
+Order timeout value
+
+Commission %
+
+Tax settings
+
+Does:
+
+Update system rules
+
+7. Payments & Reports
+
+Shows:
+
+Vendor payouts
+
+Refunds
+
+Transaction logs
+
+Does:
+
+Export CSV
+
+Run reports
+
+✔ Admin panel is your brain center.
+
+⭐ FINAL SUMMARY (YOU CAN BUILD FROM THIS WITHOUT CONFUSION)
+Customer App =
+
+order → pay → track → chat → history
+
+Vendor App =
+
+receive → accept → deliver → chat → earnings
+
+Admin Web =
+
+inventory → vendors → orders → reports → system configs
