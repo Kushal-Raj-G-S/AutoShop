@@ -23,14 +23,8 @@ router.post(
   assignmentController.rejectOrder
 );
 
-// Admin routes
-router.post(
-  '/admin/orders/:orderId/force-assign',
-  verifyToken,
-  requireRole('admin'),
-  assignmentController.forceAssign
-);
-
+// Admin routes - Assignment history and start assignment
+// NOTE: force-assign is handled in admin.orders.routes.js
 router.post(
   '/admin/orders/:orderId/start-assignment',
   verifyToken,

@@ -586,25 +586,23 @@ export default function ItemsPage() {
             <DialogTitle className="text-xl font-bold text-red-600">
               Permanently Delete Items?
             </DialogTitle>
-            <DialogDescription className="text-base pt-4">
-              <div className="space-y-3">
-                <p className="text-gray-700">
-                  Are you sure you want to permanently delete <span className="font-semibold text-gray-900">{itemsToDelete.length} item(s)</span>?
-                </p>
-                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-600 mb-2">Items to delete:</p>
-                  <p className="text-sm text-gray-800 font-mono">
-                    {itemsToDelete.map(id => `#${id}`).join(', ')}
-                  </p>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-800 font-semibold">
-                    ⚠️ This action cannot be undone!
-                  </p>
-                </div>
-              </div>
-            </DialogDescription>
           </DialogHeader>
+          <div className="space-y-3 pt-4">
+            <p className="text-gray-700">
+              Are you sure you want to permanently delete <span className="font-semibold text-gray-900">{itemsToDelete.length} item(s)</span>?
+            </p>
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <p className="text-sm font-medium text-gray-600 mb-2">Items to delete:</p>
+              <p className="text-sm text-gray-800 font-mono">
+                {itemsToDelete.map(id => `#${id}`).join(', ')}
+              </p>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-sm text-red-800 font-semibold">
+                ⚠️ This action cannot be undone!
+              </p>
+            </div>
+          </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
@@ -640,28 +638,26 @@ export default function ItemsPage() {
             <DialogTitle className="text-xl font-bold text-red-600">
               Delete Item?
             </DialogTitle>
-            <DialogDescription className="text-base pt-4">
-              <div className="space-y-3">
-                <p className="text-gray-700">
-                  Are you sure you want to delete this item?
-                </p>
-                <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                  <p className="text-sm font-medium text-gray-600 mb-1">Item:</p>
-                  <p className="text-base text-gray-900 font-semibold">
-                    {singleDeleteDialog.name}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    ID: #{singleDeleteDialog.id}
-                  </p>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-800 font-semibold">
-                    ⚠️ This action cannot be undone!
-                  </p>
-                </div>
-              </div>
-            </DialogDescription>
           </DialogHeader>
+          <div className="space-y-3 pt-4">
+            <p className="text-gray-700">
+              Are you sure you want to delete this item?
+            </p>
+            <div className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+              <p className="text-sm font-medium text-gray-600 mb-1">Item:</p>
+              <p className="text-base text-gray-900 font-semibold">
+                {singleDeleteDialog.name}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                ID: #{singleDeleteDialog.id}
+              </p>
+            </div>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <p className="text-sm text-red-800 font-semibold">
+                ⚠️ This action cannot be undone!
+              </p>
+            </div>
+          </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"

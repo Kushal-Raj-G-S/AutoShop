@@ -18,10 +18,23 @@ if (process.env.DATABASE_URL) {
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false },
-  // Add connection timeout and better error handling
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
-  max: 20
+  // Increase timeouts for Supabase pooler
+  connectionTimeoutMillis: 30000,
+  idleTimeoutMillis: 60000,
+  query_timeout: 30000,
+  max: 10, // Reduce max connections for pooler
+  min: 2,  // Keep minimum connections alive
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+});
+
+// Handle pool errors
+pool.on('error', (err) => {
+  console.error('❌ Unexpected database pool error:', err);
+});
+
+pool.on('connect', () => {
+  console.log('✅ Database connection established');
 });
 
 export const db = drizzle(pool, { schema });

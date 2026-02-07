@@ -43,8 +43,8 @@ class VendorService {
           pincode,
           latitude,
           longitude,
-          latitude,
-          longitude,
+          serviceAreas: payload.serviceAreas || [],
+          bankDetails: payload.bankDetails || null,
         })
         .returning();
 
@@ -69,8 +69,12 @@ class VendorService {
           ownerName: vendors.ownerName,
           phone: vendors.phone,
           documentUrl: vendors.documentUrl,
+          storeAddress: vendors.storeAddress,
+          pincode: vendors.pincode,
           latitude: vendors.latitude,
           longitude: vendors.longitude,
+          serviceAreas: vendors.serviceAreas,
+          bankDetails: vendors.bankDetails,
           status: vendors.status,
           createdAt: vendors.createdAt,
         })
@@ -92,7 +96,7 @@ class VendorService {
   // Update vendor
   async updateVendor(userId, payload) {
     try {
-      const { storeName, ownerName, phone, documentUrl, latitude, longitude } = payload;
+      const { storeName, ownerName, phone, documentUrl, storeAddress, pincode, latitude, longitude, serviceAreas, bankDetails } = payload;
 
       // Check if vendor exists
       const existingVendor = await db
@@ -111,8 +115,12 @@ class VendorService {
       if (ownerName !== undefined) updateData.ownerName = ownerName;
       if (phone !== undefined) updateData.phone = phone;
       if (documentUrl !== undefined) updateData.documentUrl = documentUrl;
+      if (storeAddress !== undefined) updateData.storeAddress = storeAddress;
+      if (pincode !== undefined) updateData.pincode = pincode;
       if (latitude !== undefined) updateData.latitude = latitude;
       if (longitude !== undefined) updateData.longitude = longitude;
+      if (serviceAreas !== undefined) updateData.serviceAreas = serviceAreas;
+      if (bankDetails !== undefined) updateData.bankDetails = bankDetails;
 
       if (Object.keys(updateData).length === 0) {
         throw new Error('No fields to update');
@@ -161,7 +169,7 @@ class VendorService {
   }
 
   // Approve vendor
-  async approveVendor(vendorId) {
+  async approveVendor(vendorId, adminNotes = null) {
     try {
       // Check if vendor exists
       const vendor = await db
@@ -174,10 +182,25 @@ class VendorService {
         throw new Error('Vendor not found');
       }
 
-      // Update status to approved
+      // Update status to approved and save admin notes
+      const updateData = { status: 'approved', updatedAt: new Date() };
+      if (adminNotes) {
+        // Get existing notes array
+        const existingNotes = vendor[0].adminNotes || [];
+        // Append new note
+        updateData.adminNotes = [
+          ...existingNotes,
+          {
+            note: adminNotes,
+            timestamp: new Date().toISOString(),
+            action: 'approved'
+          }
+        ];
+      }
+      
       const updatedVendor = await db
         .update(vendors)
-        .set({ status: 'approved' })
+        .set(updateData)
         .where(eq(vendors.id, vendorId))
         .returning();
 
@@ -198,7 +221,7 @@ class VendorService {
   }
 
   // Reject vendor
-  async rejectVendor(vendorId) {
+  async rejectVendor(vendorId, adminNotes = null) {
     try {
       // Check if vendor exists
       const vendor = await db
@@ -211,10 +234,25 @@ class VendorService {
         throw new Error('Vendor not found');
       }
 
-      // Update status to rejected
+      // Update status to rejected and save admin notes
+      const updateData = { status: 'rejected', updatedAt: new Date() };
+      if (adminNotes) {
+        // Get existing notes array
+        const existingNotes = vendor[0].adminNotes || [];
+        // Append new note
+        updateData.adminNotes = [
+          ...existingNotes,
+          {
+            note: adminNotes,
+            timestamp: new Date().toISOString(),
+            action: 'rejected'
+          }
+        ];
+      }
+      
       const updatedVendor = await db
         .update(vendors)
-        .set({ status: 'rejected' })
+        .set(updateData)
         .where(eq(vendors.id, vendorId))
         .returning();
 
@@ -239,8 +277,12 @@ class VendorService {
           ownerName: vendors.ownerName,
           phone: vendors.phone,
           documentUrl: vendors.documentUrl,
+          storeAddress: vendors.storeAddress,
+          pincode: vendors.pincode,
           latitude: vendors.latitude,
           longitude: vendors.longitude,
+          serviceAreas: vendors.serviceAreas,
+          bankDetails: vendors.bankDetails,
           status: vendors.status,
           createdAt: vendors.createdAt,
           user: {
@@ -379,6 +421,104 @@ class VendorService {
       };
     } catch (error) {
       throw new Error(error.message || 'Failed to block vendor');
+    }
+  }
+
+  // Unblock vendor
+  async unblockVendor(vendorId) {
+    try {
+      const vendor = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor || vendor.length === 0) {
+        throw new Error('Vendor not found');
+      }
+
+      const [updatedVendor] = await db
+        .update(vendors)
+        .set({ status: 'approved' })
+        .where(eq(vendors.id, vendorId))
+        .returning();
+
+      return {
+        success: true,
+        message: 'Vendor unblocked',
+        vendor: updatedVendor,
+      };
+    } catch (error) {
+      throw new Error(error.message || 'Failed to unblock vendor');
+    }
+  }
+
+  // Update required documents
+  async updateRequiredDocuments(vendorId, requiredDocuments) {
+    try {
+      const vendor = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor || vendor.length === 0) {
+        throw new Error('Vendor not found');
+      }
+
+      const [updatedVendor] = await db
+        .update(vendors)
+        .set({ requiredDocuments, updatedAt: new Date() })
+        .where(eq(vendors.id, vendorId))
+        .returning();
+
+      return {
+        success: true,
+        message: 'Required documents updated',
+        vendor: updatedVendor,
+      };
+    } catch (error) {
+      throw new Error(error.message || 'Failed to update required documents');
+    }
+  }
+
+  // Update admin notes
+  async updateAdminNotes(vendorId, adminNotes) {
+    try {
+      const vendor = await db
+        .select()
+        .from(vendors)
+        .where(eq(vendors.id, vendorId))
+        .limit(1);
+
+      if (!vendor || vendor.length === 0) {
+        throw new Error('Vendor not found');
+      }
+
+      // Get existing notes array and append new note
+      const existingNotes = vendor[0].adminNotes || [];
+      const updatedNotes = [
+        ...existingNotes,
+        {
+          note: adminNotes,
+          timestamp: new Date().toISOString(),
+          action: 'note_added'
+        }
+      ];
+
+      const [updatedVendor] = await db
+        .update(vendors)
+        .set({ adminNotes: updatedNotes, updatedAt: new Date() })
+        .where(eq(vendors.id, vendorId))
+        .returning();
+
+      return {
+        success: true,
+        message: 'Admin note added successfully',
+        vendor: updatedVendor,
+      };
+    } catch (error) {
+      throw new Error(error.message || 'Failed to add admin note');
     }
   }
 }

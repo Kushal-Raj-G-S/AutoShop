@@ -2,7 +2,7 @@ import 'api_service.dart';
 
 class VendorApi {
   final ApiService _api = ApiService();
-  
+
   /// Register as vendor
   Future<Map<String, dynamic>> register({
     required String storeName,
@@ -16,6 +16,7 @@ class VendorApi {
     String? gstNumber,
     String? panNumber,
     List<String>? serviceAreas,
+    Map<String, String>? bankDetails,
   }) async {
     return await _api.post('/vendor/register', {
       'storeName': storeName,
@@ -29,26 +30,29 @@ class VendorApi {
       if (gstNumber != null) 'gstNumber': gstNumber,
       if (panNumber != null) 'panNumber': panNumber,
       if (serviceAreas != null) 'serviceAreas': serviceAreas,
+      if (bankDetails != null) 'bankDetails': bankDetails,
     });
   }
-  
+
   /// Get vendor profile
   Future<Map<String, dynamic>> getProfile() async {
     final result = await _api.get('/vendor/me');
-    
+
     // Cache vendor data
     if (result['success'] == true && result['data'] != null) {
       await _api.saveVendorData(result['data']);
     }
-    
+
     return result;
   }
-  
+
   /// Update vendor profile
-  Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> updates) async {
+  Future<Map<String, dynamic>> updateProfile(
+    Map<String, dynamic> updates,
+  ) async {
     return await _api.put('/vendor/update', updates);
   }
-  
+
   /// Check if vendor is approved
   Future<String> getApprovalStatus() async {
     final result = await getProfile();

@@ -109,12 +109,13 @@ class VendorController {
   async approveVendor(req, res) {
     try {
       const { id } = req.params;
+      const { adminNotes } = req.body;
 
       if (!id || isNaN(id)) {
         return sendResponse(res, 400, false, 'Valid vendor ID is required');
       }
 
-      const result = await vendorService.approveVendor(parseInt(id));
+      const result = await vendorService.approveVendor(parseInt(id), adminNotes);
 
       return sendResponse(res, 200, true, result.message, { vendor: result.vendor });
     } catch (error) {
@@ -127,12 +128,13 @@ class VendorController {
   async rejectVendor(req, res) {
     try {
       const { id } = req.params;
+      const { adminNotes } = req.body;
 
       if (!id || isNaN(id)) {
         return sendResponse(res, 400, false, 'Valid vendor ID is required');
       }
 
-      const result = await vendorService.rejectVendor(parseInt(id));
+      const result = await vendorService.rejectVendor(parseInt(id), adminNotes);
 
       return sendResponse(res, 200, true, result.message, { vendor: result.vendor });
     } catch (error) {
@@ -232,6 +234,63 @@ class VendorController {
     } catch (error) {
       console.error('Block Vendor Error:', error);
       return sendResponse(res, 400, false, error.message || 'Failed to block vendor');
+    }
+  }
+
+  // Unblock vendor
+  async unblockVendor(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!id || isNaN(id)) {
+        return sendResponse(res, 400, false, 'Valid vendor ID is required');
+      }
+
+      const result = await vendorService.unblockVendor(parseInt(id));
+      return sendResponse(res, 200, true, result.message, { vendor: result.vendor });
+    } catch (error) {
+      console.error('Unblock Vendor Error:', error);
+      return sendResponse(res, 400, false, error.message || 'Failed to unblock vendor');
+    }
+  }
+
+  // Update required documents
+  async updateRequiredDocuments(req, res) {
+    try {
+      const { id } = req.params;
+      const { requiredDocuments } = req.body;
+
+      if (!id || isNaN(id)) {
+        return sendResponse(res, 400, false, 'Valid vendor ID is required');
+      }
+
+      if (!Array.isArray(requiredDocuments)) {
+        return sendResponse(res, 400, false, 'requiredDocuments must be an array');
+      }
+
+      const result = await vendorService.updateRequiredDocuments(parseInt(id), requiredDocuments);
+      return sendResponse(res, 200, true, result.message, { vendor: result.vendor });
+    } catch (error) {
+      console.error('Update Required Documents Error:', error);
+      return sendResponse(res, 400, false, error.message || 'Failed to update required documents');
+    }
+  }
+
+  // Update admin notes
+  async updateAdminNotes(req, res) {
+    try {
+      const { id } = req.params;
+      const { adminNotes } = req.body;
+
+      if (!id || isNaN(id)) {
+        return sendResponse(res, 400, false, 'Valid vendor ID is required');
+      }
+
+      const result = await vendorService.updateAdminNotes(parseInt(id), adminNotes);
+      return sendResponse(res, 200, true, result.message, { vendor: result.vendor });
+    } catch (error) {
+      console.error('Update Admin Notes Error:', error);
+      return sendResponse(res, 400, false, error.message || 'Failed to update admin notes');
     }
   }
 }

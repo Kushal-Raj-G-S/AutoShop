@@ -16,6 +16,8 @@ axiosInstance.interceptors.request.use(
         config.headers.Authorization = `Bearer ${token}`;
       }
     }
+    // Log request for debugging
+    console.log('🔵 API Request:', config.method?.toUpperCase(), config.url);
     return config;
   },
   (error) => {

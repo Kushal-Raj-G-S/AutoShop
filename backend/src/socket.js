@@ -9,22 +9,37 @@ let redisClient;
 /**
  * Initialize Socket.io server
  */
-export async function initializeSocket(server) {
-  // Initialize Redis client
-  redisClient = createClient({
-    url: process.env.REDIS_URL,
-  });
-
-  redisClient.on('error', (err) => console.error('Redis Client Error:', err));
-  await redisClient.connect();
-  console.log('✅ Redis connected');
+export async function initializeSocket(server, redis = null) {
+  // Use provided Redis client or create new one
+  if (redis) {
+    redisClient = redis;
+    console.log('✅ Using provided Redis client');
+  } else if (process.env.REDIS_URL && process.env.REDIS_URL !== 'redis://default:password@host:port') {
+    // Try to create Redis client if URL is provided
+    try {
+      redisClient = createClient({
+        url: process.env.REDIS_URL,
+      });
+      redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+      await redisClient.connect();
+      console.log('✅ Redis connected');
+    } catch (error) {
+      console.warn('⚠️  Failed to connect to Redis:', error.message);
+      console.warn('⚠️  Socket.io will work without atomic locking');
+      redisClient = null;
+    }
+  } else {
+    console.warn('⚠️  Redis not configured - Socket.io will work without atomic locking');
+    redisClient = null;
+  }
 
   // Initialize Socket.io
   io = new Server(server, {
     cors: {
-      origin: process.env.SOCKET_CORS_ORIGIN || 'http://localhost:3000',
+      origin: process.env.SOCKET_CORS_ORIGIN || '*',
       credentials: true,
     },
+    transports: ['websocket', 'polling'],
   });
 
   // Socket authentication middleware
@@ -71,32 +86,42 @@ export async function initializeSocket(server) {
           const { orderId } = data;
           const vendorId = data.vendorId || socket.userId;
 
-          // Atomic Redis lock
-          const lockKey = `order:lock:${orderId}`;
-          const lockValue = `vendor:${vendorId}:${Date.now()}`;
+          let locked = false;
+          let lockKey = null;
+          let lockValue = null;
 
-          // Try to acquire lock (atomic operation)
-          const locked = await redisClient.set(lockKey, lockValue, {
-            NX: true, // Only set if not exists
-            EX: 300, // Expire in 5 minutes
-          });
+          // Try atomic Redis lock if available
+          if (redisClient) {
+            lockKey = `order:lock:${orderId}`;
+            lockValue = `vendor:${vendorId}:${Date.now()}`;
 
-          if (!locked) {
-            // Lock failed - another vendor got it
-            socket.emit('ACCEPT_ORDER_FAILED', {
-              orderId,
-              reason: 'Order already accepted by another vendor',
+            // Try to acquire lock (atomic operation)
+            locked = await redisClient.set(lockKey, lockValue, {
+              NX: true, // Only set if not exists
+              EX: 300, // Expire in 5 minutes
             });
-            
-            // For test compatibility
-            socket.emit('ACCEPT_RESULT', {
-              ok: false,
-              winner: false,
-              orderId,
-            });
-            
-            console.log(`❌ Vendor ${vendorId} lost race for order ${orderId}`);
-            return;
+
+            if (!locked) {
+              // Lock failed - another vendor got it
+              socket.emit('ACCEPT_ORDER_FAILED', {
+                orderId,
+                reason: 'Order already accepted by another vendor',
+              });
+              
+              // For test compatibility
+              socket.emit('ACCEPT_RESULT', {
+                ok: false,
+                winner: false,
+                orderId,
+              });
+              
+              console.log(`❌ Vendor ${vendorId} lost race for order ${orderId}`);
+              return;
+            }
+          } else {
+            // No Redis - proceed without locking (first-come-first-serve at DB level)
+            console.log('⚠️  Processing order without Redis lock');
+            locked = true;
           }
 
           try {
@@ -123,8 +148,10 @@ export async function initializeSocket(server) {
 
             console.log(`✅ Order ${orderId} accepted by vendor ${vendorId}`);
           } catch (error) {
-            // Release lock on error
-            await redisClient.del(lockKey);
+            // Release lock on error (if Redis is available)
+            if (redisClient && lockKey) {
+              await redisClient.del(lockKey);
+            }
             
             socket.emit('ACCEPT_ORDER_FAILED', {
               orderId,
@@ -199,6 +226,11 @@ export async function initializeSocket(server) {
       // TEST HANDLER: Lock-only test (no DB required)
       socket.on('TEST_ACCEPT_ONLY', async ({ orderId }) => {
         try {
+          if (!redisClient) {
+            socket.emit('TEST_ACCEPT_RESULT', { ok: false, winner: false, error: 'Redis not available' });
+            return;
+          }
+
           const vendorId = socket.userId;
           const key = `testlock:${orderId}`;
           const result = await redisClient.set(key, vendorId, { NX: true, EX: 60 });

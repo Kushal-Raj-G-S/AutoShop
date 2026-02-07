@@ -83,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Watch for locale changes
     context.watch<LocaleProvider>();
     final strings = AppStrings.of(context);
-    
+
     // Extract user info from saved data
     final userName = _userData?['name'] ?? 'User';
     final phoneNumber = _userData?['phoneNumber'] ?? '';
@@ -92,10 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
-        title: Text(strings.myAccount),
-        elevation: 0,
-      ),
+      appBar: AppBar(title: Text(strings.myAccount), elevation: 0),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -103,45 +100,106 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: [
                   // User Header
-                  Center(
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppTheme.primaryColor,
+                          AppTheme.primaryColor.withValues(alpha: 0.8),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
                     child: Column(
                       children: [
                         Container(
-                          width: 100,
-                          height: 100,
+                          width: 90,
+                          height: 90,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                            border: Border.all(color: AppTheme.primaryColor, width: 2),
+                            color: Colors.white,
+                            border: Border.all(
+                              color: AppTheme.accentColor,
+                              width: 3,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          child: Icon(Icons.person, size: 50, color: AppTheme.primaryColor),
+                          child: Icon(
+                            Icons.person,
+                            size: 45,
+                            color: AppTheme.primaryColor,
+                          ),
                         ),
                         SizedBox(height: AppTheme.spaceMedium),
                         Text(
-                          userName.isNotEmpty ? userName : 'Set up your profile',
-                          style: AppTheme.heading2,
+                          userName.isNotEmpty
+                              ? userName
+                              : 'Set up your profile',
+                          style: AppTheme.heading2.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
                         ),
                         SizedBox(height: AppTheme.spaceSmall),
-                        Text(phoneNumber, style: AppTheme.bodyMedium),
+                        Text(
+                          phoneNumber,
+                          style: AppTheme.bodyMedium.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                          ),
+                        ),
                         if (email != null && email.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4),
-                            child: Text(email, style: AppTheme.bodySmall),
+                            child: Text(
+                              email,
+                              style: AppTheme.bodySmall.copyWith(
+                                color: Colors.white.withValues(alpha: 0.8),
+                              ),
+                            ),
                           ),
                         if (role == 'admin' || role == 'vendor')
                           Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            margin: const EdgeInsets.only(top: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
-                              color: AppTheme.accentColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
+                              color: AppTheme.accentColor,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppTheme.accentColor.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Text(
                               role.toUpperCase(),
-                              style: TextStyle(
-                                color: AppTheme.accentColor,
+                              style: const TextStyle(
+                                color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
+                                letterSpacing: 1,
                               ),
                             ),
                           ),
@@ -156,35 +214,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.shopping_bag_outlined,
                     title: strings.myOrders,
                     subtitle: 'Track current and past orders',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const OrderListScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (c) => const OrderListScreen(),
+                      ),
+                    ),
                   ),
                   _buildProfileOption(
                     context,
                     icon: Icons.location_on_outlined,
                     title: strings.deliveryAddresses,
                     subtitle: 'Manage shipping locations',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const AddressListScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (c) => const AddressListScreen(),
+                      ),
+                    ),
                   ),
                   _buildProfileOption(
                     context,
                     icon: Icons.directions_car_outlined,
                     title: strings.myGarage,
                     subtitle: 'Manage your vehicles',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const GarageScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (c) => const GarageScreen()),
+                    ),
                   ),
                   _buildProfileOption(
                     context,
                     icon: Icons.favorite_border,
                     title: strings.wishlist,
                     subtitle: 'Saved items for later',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const WishlistScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (c) => const WishlistScreen()),
+                    ),
                   ),
                   _buildProfileOption(
                     context,
                     icon: Icons.notifications_none,
                     title: strings.notifications,
                     subtitle: 'Offers and order updates',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const NotificationsScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (c) => const NotificationsScreen(),
+                      ),
+                    ),
                   ),
                   // Theme Toggle
                   _buildThemeOption(context),
@@ -195,7 +274,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     icon: Icons.help_outline,
                     title: strings.helpSupport,
                     subtitle: 'FAQs and Customer Care',
-                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (c) => const HelpSupportScreen())),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (c) => const HelpSupportScreen(),
+                      ),
+                    ),
                   ),
 
                   SizedBox(height: AppTheme.spaceLarge),
@@ -221,49 +305,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(
+          color: AppTheme.borderColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        child: Container(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        child: Padding(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            border: Border.all(color: Theme.of(context).dividerColor),
-          ),
           child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: isDark ? AppTheme.accentColor.withValues(alpha: 0.2) : Colors.white,
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.accentColor.withValues(alpha: 0.15),
+                      AppTheme.accentColor.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(icon, color: isDark ? AppTheme.accentColor : AppTheme.primaryColor),
+                child: Icon(icon, color: AppTheme.accentColor, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? AppTheme.darkTextPrimary : AppTheme.textPrimary,
-                    )),
-                    const SizedBox(height: 2),
-                    Text(subtitle, style: TextStyle(
-                      fontSize: 12,
-                      color: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary,
-                    )),
+                    Text(
+                      title,
+                      style: AppTheme.heading3.copyWith(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: AppTheme.bodySmall.copyWith(
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: isDark ? AppTheme.darkTextSecondary : AppTheme.textSecondary),
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: AppTheme.textSecondary,
+                size: 18,
+              ),
             ],
           ),
         ),
@@ -274,7 +373,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildThemeOption(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final isDark = themeProvider.isDarkMode;
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Container(
@@ -289,7 +388,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isDark ? AppTheme.accentColor.withValues(alpha: 0.2) : Colors.white,
+                color: isDark
+                    ? AppTheme.accentColor.withValues(alpha: 0.2)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(
@@ -302,7 +403,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Appearance', style: AppTheme.heading3.copyWith(fontSize: 16)),
+                  Text(
+                    'Appearance',
+                    style: AppTheme.heading3.copyWith(fontSize: 16),
+                  ),
                   const SizedBox(height: 2),
                   Text(
                     isDark ? 'Dark Mode' : 'Light Mode',
@@ -326,15 +430,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildLanguageOption(BuildContext context) {
     final localeProvider = context.watch<LocaleProvider>();
     final lang = localeProvider.languageCode;
-    
+
     String getLanguageName() {
       switch (lang) {
-        case 'hi': return 'हिंदी';
-        case 'kn': return 'ಕನ್ನಡ';
-        default: return 'English';
+        case 'hi':
+          return 'हिंदी';
+        case 'kn':
+          return 'ಕನ್ನಡ';
+        default:
+          return 'English';
       }
     }
-    
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Container(
@@ -349,8 +456,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark 
-                    ? AppTheme.accentColor.withValues(alpha: 0.2) 
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppTheme.accentColor.withValues(alpha: 0.2)
                     : Colors.white,
                 borderRadius: BorderRadius.circular(10),
               ),
@@ -361,12 +468,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Language / भाषा / ಭಾಷೆ', style: AppTheme.heading3.copyWith(fontSize: 16)),
-                  const SizedBox(height: 2),
                   Text(
-                    getLanguageName(),
-                    style: AppTheme.bodySmall,
+                    'Language / भाषा / ಭಾಷೆ',
+                    style: AppTheme.heading3.copyWith(fontSize: 16),
                   ),
+                  const SizedBox(height: 2),
+                  Text(getLanguageName(), style: AppTheme.bodySmall),
                 ],
               ),
             ),
@@ -390,8 +497,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
   }
-  
-  Widget _buildLangButton(LocaleProvider provider, String langCode, String label, bool isSelected) {
+
+  Widget _buildLangButton(
+    LocaleProvider provider,
+    String langCode,
+    String label,
+    bool isSelected,
+  ) {
     return GestureDetector(
       onTap: () => provider.setLocale(Locale(langCode)),
       child: Container(
@@ -412,4 +524,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-

@@ -21,6 +21,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@radix-ui/react-switch": "^1.2.6",
     "@supabase/supabase-js": "^2.89.0",
     "axios": "^1.13.2",
     "csv-parse": "^6.1.0",

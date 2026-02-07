@@ -17,11 +17,21 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
 
   final _storeNameController = TextEditingController();
   final _ownerNameController = TextEditingController();
-  final _phoneController = TextEditingController(); // Added
-  final _documentUrlController = TextEditingController(); // Added
+  final _phoneController = TextEditingController();
+  final _documentUrlController = TextEditingController();
   final _addressController = TextEditingController();
   final _pincodeController = TextEditingController();
   final _gstController = TextEditingController();
+
+  // Service Areas
+  final _serviceAreasController = TextEditingController();
+
+  // Bank Details
+  final _accountNumberController = TextEditingController();
+  final _ifscCodeController = TextEditingController();
+  final _accountHolderNameController = TextEditingController();
+  final _bankNameController = TextEditingController();
+  final _branchNameController = TextEditingController();
 
   bool _isLoading = false;
   String? _errorMessage;
@@ -60,6 +70,12 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
     _addressController.dispose();
     _pincodeController.dispose();
     _gstController.dispose();
+    _serviceAreasController.dispose();
+    _accountNumberController.dispose();
+    _ifscCodeController.dispose();
+    _accountHolderNameController.dispose();
+    _bankNameController.dispose();
+    _branchNameController.dispose();
     super.dispose();
   }
 
@@ -71,6 +87,34 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       _errorMessage = null;
     });
 
+    // Parse service areas
+    List<String>? serviceAreas;
+    if (_serviceAreasController.text.trim().isNotEmpty) {
+      serviceAreas = _serviceAreasController.text
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+    }
+
+    // Parse bank details
+    Map<String, String>? bankDetails;
+    if (_accountNumberController.text.trim().isNotEmpty ||
+        _ifscCodeController.text.trim().isNotEmpty) {
+      bankDetails = {
+        if (_accountNumberController.text.trim().isNotEmpty)
+          'accountNumber': _accountNumberController.text.trim(),
+        if (_ifscCodeController.text.trim().isNotEmpty)
+          'ifscCode': _ifscCodeController.text.trim(),
+        if (_accountHolderNameController.text.trim().isNotEmpty)
+          'accountHolderName': _accountHolderNameController.text.trim(),
+        if (_bankNameController.text.trim().isNotEmpty)
+          'bankName': _bankNameController.text.trim(),
+        if (_branchNameController.text.trim().isNotEmpty)
+          'branchName': _branchNameController.text.trim(),
+      };
+    }
+
     final result = await _vendorApi.register(
       storeName: _storeNameController.text.trim(),
       ownerName: _ownerNameController.text.trim(),
@@ -78,11 +122,13 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       documentUrl: _documentUrlController.text.trim(),
       storeAddress: _addressController.text.trim(),
       pincode: _pincodeController.text.trim(),
-      latitude: 0, // Will be updated by admin after approval
+      latitude: 0,
       longitude: 0,
       gstNumber: _gstController.text.trim().isNotEmpty
           ? _gstController.text.trim()
           : null,
+      serviceAreas: serviceAreas,
+      bankDetails: bankDetails,
     );
 
     setState(() => _isLoading = false);
@@ -234,6 +280,115 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
                   textCapitalization: TextCapitalization.characters,
                   decoration: const InputDecoration(
                     hintText: '22AAAAA0000A1Z5',
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Service Areas Section
+                Text(
+                  'Service Areas',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Specify the pincodes where you provide service',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                _buildLabel('Service Pincodes (Optional)'),
+                TextFormField(
+                  controller: _serviceAreasController,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g., 560001, 560002, 560003',
+                    helperText: 'Comma-separated pincodes',
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Bank Details Section
+                Text(
+                  'Bank Details (KYC)',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? AppTheme.darkTextPrimary
+                        : AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Required for receiving payments (Optional for now)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isDark
+                        ? AppTheme.darkTextSecondary
+                        : AppTheme.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                _buildLabel('Account Holder Name'),
+                TextFormField(
+                  controller: _accountHolderNameController,
+                  decoration: const InputDecoration(
+                    hintText: 'As per bank records',
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                _buildLabel('Account Number'),
+                TextFormField(
+                  controller: _accountNumberController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'Bank account number',
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                _buildLabel('IFSC Code'),
+                TextFormField(
+                  controller: _ifscCodeController,
+                  textCapitalization: TextCapitalization.characters,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g., SBIN0001234',
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                _buildLabel('Bank Name'),
+                TextFormField(
+                  controller: _bankNameController,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g., State Bank of India',
+                  ),
+                ),
+
+                const SizedBox(height: 16),
+
+                _buildLabel('Branch Name'),
+                TextFormField(
+                  controller: _branchNameController,
+                  decoration: const InputDecoration(
+                    hintText: 'e.g., MG Road Branch',
                   ),
                 ),
 

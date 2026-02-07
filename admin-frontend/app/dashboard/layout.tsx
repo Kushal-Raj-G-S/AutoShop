@@ -9,7 +9,8 @@ import {
   Store, 
   FolderTree, 
   Package, 
-  ShoppingCart, 
+  ShoppingCart,
+  Settings,
   LogOut 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export default function DashboardLayout({
     { href: "/categories", icon: FolderTree, label: "Categories" },
     { href: "/items", icon: Package, label: "Items" },
     { href: "/orders", icon: ShoppingCart, label: "Orders" },
+    { href: "/settings", icon: Settings, label: "Settings" },
   ];
 
   return (

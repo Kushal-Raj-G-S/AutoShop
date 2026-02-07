@@ -1,6 +1,7 @@
 import { db } from '../../db/index.js';
 import { categories } from '../../db/schema.js';
 import { eq } from 'drizzle-orm';
+import { uploadCategoryImage, deleteCategoryImage, isSupabaseConfigured } from '../../utils/supabase.js';
 
 class CategoryService {
   // Create category
@@ -19,13 +20,31 @@ class CategoryService {
         throw new Error('Category with this name already exists');
       }
 
+      // Handle image upload to Supabase if configured and imageUrl is base64
+      let finalImageUrl = imageUrl || 'https://placehold.co/600x400?text=No+Image';
+      if (imageUrl && imageUrl.startsWith('data:') && isSupabaseConfigured()) {
+        try {
+          console.log('📤 Uploading category image to Supabase...');
+          
+          const categoryNameSlug = name.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+          const fileName = `categories/${categoryNameSlug}.jpg`;
+          
+          finalImageUrl = await uploadCategoryImage(imageUrl, fileName);
+          console.log('✅ Category image uploaded to Supabase:', finalImageUrl);
+        } catch (error) {
+          console.error('⚠️  Supabase upload failed, falling back to base64:', error);
+          // Fallback to base64 if upload fails
+          finalImageUrl = imageUrl;
+        }
+      }
+
       // Create category
       const newCategory = await db
         .insert(categories)
         .values({
           name,
           description: description || null,
-          imageUrl,
+          imageUrl: finalImageUrl,
         })
         .returning();
 
@@ -72,7 +91,34 @@ class CategoryService {
       const updateData = {};
       if (name !== undefined) updateData.name = name;
       if (description !== undefined) updateData.description = description;
-      if (imageUrl !== undefined) updateData.imageUrl = imageUrl;
+      
+      // Handle image upload if imageUrl is provided and is base64
+      if (imageUrl !== undefined) {
+        if (imageUrl.startsWith('data:') && isSupabaseConfigured()) {
+          try {
+            console.log('📤 Uploading updated category image to Supabase...');
+            
+            const categoryNameSlug = (name || existingCategory[0].name).replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+            const fileName = `categories/${categoryNameSlug}.jpg`;
+            
+            // Delete old image if it was stored in Supabase
+            if (existingCategory[0].imageUrl && existingCategory[0].imageUrl.includes('/Category-images/')) {
+              console.log('🗑️  Deleting old category image before uploading new one...');
+              await deleteCategoryImage(existingCategory[0].imageUrl);
+            }
+            
+            const newImageUrl = await uploadCategoryImage(imageUrl, fileName);
+            console.log('✅ Updated category image uploaded to Supabase:', newImageUrl);
+            
+            updateData.imageUrl = newImageUrl;
+          } catch (error) {
+            console.error('⚠️  Supabase upload failed, falling back to base64:', error);
+            updateData.imageUrl = imageUrl;
+          }
+        } else {
+          updateData.imageUrl = imageUrl;
+        }
+      }
 
       if (Object.keys(updateData).length === 0) {
         throw new Error('No fields to update');
@@ -120,6 +166,31 @@ class CategoryService {
       };
     } catch (error) {
       throw new Error(error.message || 'Failed to delete category');
+    }
+  }
+
+  // Get category by ID
+  async getCategoryById(id) {
+    try {
+      const [category] = await db
+        .select({
+          id: categories.id,
+          name: categories.name,
+          description: categories.description,
+          imageUrl: categories.imageUrl,
+          createdAt: categories.createdAt,
+        })
+        .from(categories)
+        .where(eq(categories.id, id))
+        .limit(1);
+
+      if (!category) {
+        throw new Error('Category not found');
+      }
+
+      return category;
+    } catch (error) {
+      throw new Error(error.message || 'Failed to fetch category');
     }
   }
 

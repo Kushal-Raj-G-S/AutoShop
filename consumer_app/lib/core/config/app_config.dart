@@ -11,7 +11,7 @@ class AppConfig {
   // Option 3: Use ngrok for public URL (best for testing on any network)
   // Download ngrok.com, run: ngrok http 5000
   // Use the URL it gives you (e.g., https://abc123.ngrok.io)
-  static const String backendHost = '192.168.31.121'; // 👈 CHANGE THIS
+  static const String backendHost = '192.168.0.104'; // 👈 CHANGE THIS
 
   static const String backendPort = '5000';
 

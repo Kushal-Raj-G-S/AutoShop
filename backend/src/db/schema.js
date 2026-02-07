@@ -1,10 +1,10 @@
-import { pgTable, uuid, varchar, timestamp, pgEnum, serial, integer, doublePrecision, text, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, timestamp, pgEnum, serial, integer, doublePrecision, text, boolean, jsonb } from 'drizzle-orm/pg-core';
 
 // Enum for user roles
 export const userRoleEnum = pgEnum('user_role', ['customer', 'vendor', 'admin']);
 
 // Enum for vendor status
-export const vendorStatusEnum = pgEnum('vendor_status', ['pending', 'approved', 'rejected']);
+export const vendorStatusEnum = pgEnum('vendor_status', ['pending', 'approved', 'rejected', 'blocked']);
 
 // Users table
 export const users = pgTable('users', {
@@ -40,8 +40,13 @@ export const vendors = pgTable('vendors', {
   pincode: varchar('pincode', { length: 10 }),
   latitude: doublePrecision('latitude').notNull(),
   longitude: doublePrecision('longitude').notNull(),
+  serviceAreas: jsonb('service_areas').$type().default([]), // Array of pincodes/area names
+  bankDetails: jsonb('bank_details').$type(), // { accountNumber, ifscCode, accountHolderName, bankName, branchName }
+  adminNotes: jsonb('admin_notes').$type().default([]), // Array of { note, timestamp, addedBy? }
+  requiredDocuments: jsonb('required_documents').$type().default([]), // Array of { name, status: 'pending'|'submitted'|'verified', url?, note? }
   status: vendorStatusEnum('status').notNull().default('pending'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
 // Categories table
@@ -53,20 +58,44 @@ export const categories = pgTable('categories', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// Sub-Categories table
+export const subCategories = pgTable('sub_categories', {
+  id: serial('id').primaryKey(),
+  categoryId: integer('category_id').notNull().references(() => categories.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Units table
+export const units = pgTable('units', {
+  id: serial('id').primaryKey(),
+  name: varchar('name', { length: 50 }).notNull().unique(), // e.g., "Pieces", "Box", "Carton"
+  abbreviation: varchar('abbreviation', { length: 20 }).notNull().unique(), // e.g., "pcs", "box", "carton"
+  description: text('description'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // Items table
 export const items = pgTable('items', {
   id: serial('id').primaryKey(),
   categoryId: integer('category_id').notNull().references(() => categories.id, { onDelete: 'restrict' }),
+  subCategoryId: integer('sub_category_id').references(() => subCategories.id, { onDelete: 'set null' }),
+  unitId: integer('unit_id').references(() => units.id, { onDelete: 'restrict' }),
   name: varchar('name', { length: 120 }).notNull(),
   slug: varchar('slug', { length: 140 }).notNull().unique(),
   sku: varchar('sku', { length: 50 }), // SKU/Part Number
   brand: varchar('brand', { length: 100 }), // Brand
-  subCategory: varchar('sub_category', { length: 100 }), // Sub-category
+  subCategory: varchar('sub_category', { length: 100 }), // Legacy field - keeping for backward compatibility
   description: text('description'),
   price: varchar('price', { length: 20 }).notNull(),
   tax: varchar('tax', { length: 10 }).default('0'), // Tax percentage
   serviceTime: integer('service_time').default(0), // Service/Lead time in minutes
-  unitType: varchar('unit_type', { length: 20 }).default('pcs'), // pcs|box|carton
+  unitType: varchar('unit_type', { length: 20 }).default('pcs'), // Legacy field - keeping for backward compatibility
   imageUrl: text('image_url'),
   isActive: varchar('is_active', { length: 10 }).notNull().default('true'),
   stock: integer('stock').notNull().default(0),
@@ -92,6 +121,19 @@ export const addresses = pgTable('addresses', {
   landmark: varchar('landmark', { length: 255 }).notNull(),
   addressType: addressTypeEnum('address_type').notNull().default('home'),
   isDefault: boolean('is_default').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// System Configuration table
+export const systemConfig = pgTable('system_config', {
+  id: serial('id').primaryKey(),
+  key: varchar('key', { length: 100 }).notNull().unique(),
+  value: text('value').notNull(),
+  description: text('description'),
+  category: varchar('category', { length: 50 }).notNull(), // 'assignment', 'pricing', 'order', 'general'
+  dataType: varchar('data_type', { length: 20 }).notNull().default('string'), // 'string', 'number', 'boolean', 'json'
+  updatedBy: uuid('updated_by').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

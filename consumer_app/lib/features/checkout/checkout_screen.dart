@@ -22,7 +22,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _instructionsController = TextEditingController();
 
   AddressModel? _selectedAddress;
-  String _selectedPaymentMethod = 'cod';
+  final String _selectedPaymentMethod = 'cod';
   bool _isPlacingOrder = false;
 
   @override

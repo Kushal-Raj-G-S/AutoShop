@@ -38,15 +38,21 @@ export default function EditCategoryPage() {
 
   const updateMutation = useMutation({
     mutationFn: (data: CategoryInput) => updateCategory(categoryId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
-      queryClient.invalidateQueries({ queryKey: ["category", categoryId] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "Category updated successfully",
       });
+      // Clear all category caches
+      await queryClient.resetQueries({ queryKey: ["admin-categories"] });
+      await queryClient.resetQueries({ queryKey: ["category", categoryId] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      // Navigate and force refresh
       router.push("/categories");
+      setTimeout(() => {
+        router.refresh();
+        window.location.href = '/categories';
+      }, 100);
     },
     onError: (error: any) => {
       toast({

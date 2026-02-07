@@ -2,13 +2,13 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getOrderById, cancelOrder } from "@/lib/api/orders";
+import { getOrderById, cancelOrder, triggerAutoAssignment } from "@/lib/api/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, UserCheck } from "lucide-react";
+import { ArrowLeft, Loader2, UserCheck, Zap } from "lucide-react";
 import Link from "next/link";
 import { OrderStatusBadge } from "@/components/orders/OrderStatusBadge";
 import { OrderTimeline } from "@/components/orders/OrderTimeline";
@@ -27,6 +27,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+
+// Helper functions to determine what actions are available based on order status
+const canAssignVendor = (status: string) => {
+  const assignableStatuses = ['payment_verified', 'paid', 'awaiting_assignment', 'assigned'];
+  return assignableStatuses.includes(status);
+};
+
+const canReassignVendor = (status: string) => {
+  // Can reassign if status is 'assigned' but NOT after vendor accepts
+  // Once vendor accepts, status moves to 'vendor_accepted' or 'in_progress'
+  return status === 'assigned';
+};
+
+const canCancelOrder = (status: string) => {
+  const cancellableStatuses = ['payment_verified', 'paid', 'awaiting_assignment', 'assigned', 'vendor_accepted'];
+  return cancellableStatuses.includes(status);
+};
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -65,6 +82,33 @@ export default function OrderDetailPage() {
       toast({
         title: "Error",
         description: error.response?.data?.message || "Failed to cancel order",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const autoAssignMutation = useMutation({
+    mutationFn: () => triggerAutoAssignment(orderId),
+    onSuccess: async () => {
+      toast({
+        title: "Auto-assignment Started",
+        description: "Order pushed to nearby vendors. Waiting for acceptance...",
+      });
+      
+      // Wait a moment for backend to update order status
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Invalidate and refetch
+      await queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      
+      // Force refetch
+      await queryClient.refetchQueries({ queryKey: ["order", orderId] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to trigger auto-assignment",
         variant: "destructive",
       });
     },
@@ -153,14 +197,37 @@ export default function OrderDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Show Assign/Reassign Vendor button based on state */}
+          {/* Show Auto Assign button only when no vendor assigned */}
+          {canAssignVendor(order.status) && !order.vendorId && (
+            <Button
+              onClick={() => autoAssignMutation.mutate()}
+              disabled={autoAssignMutation.isPending}
+              variant="default"
+            >
+              {autoAssignMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Auto Assigning...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Auto Assign
+                </>
+              )}
+            </Button>
+          )}
+
+          {/* Show Manual Assign/Reassign Vendor button */}
           {canAssignVendor(order.status) && (
+            // Check if vendor is already assigned and locked (status beyond 'assigned')
             order.vendorId && !canReassignVendor(order.status) ? (
               <Button variant="outline" disabled title="Cannot reassign vendor after acceptance">
                 <UserCheck className="w-4 h-4 mr-2" />
                 Vendor Locked
               </Button>
             ) : (
+              // Show Assign or Reassign modal
               <AssignVendorModal orderId={orderId} currentVendorId={order.vendorId} />
             )
           )}
@@ -291,6 +358,14 @@ export default function OrderDetailPage() {
                     </p>
                   </div>
                 </>
+              ) : order.status === 'awaiting_assignment' ? (
+                <div className="flex items-center gap-2 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <Loader2 className="w-5 h-5 text-yellow-600 animate-spin" />
+                  <div>
+                    <p className="font-medium text-yellow-900">Waiting for vendor acceptance</p>
+                    <p className="text-sm text-yellow-700">Order has been pushed to nearby vendors. Waiting for response...</p>
+                  </div>
+                </div>
               ) : (
                 <p className="text-gray-500 italic">No vendor assigned yet</p>
               )}

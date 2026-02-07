@@ -44,6 +44,13 @@ router.patch('/vendors/:id/reject', verifyToken, requireRole('admin'), vendorCon
 router.patch('/vendors/:id/block', verifyToken, requireRole('admin'), vendorController.blockVendor.bind(vendorController));
 
 /**
+ * @route   PATCH /api/admin/vendors/:id/unblock
+ * @desc    Unblock vendor
+ * @access  Admin only
+ */
+router.patch('/vendors/:id/unblock', verifyToken, requireRole('admin'), vendorController.unblockVendor.bind(vendorController));
+
+/**
  * @route   POST /api/admin/vendors
  * @desc    Create vendor by admin
  * @access  Admin only
@@ -63,5 +70,19 @@ router.put('/vendors/:id', verifyToken, requireRole('admin'), vendorController.u
  * @access  Admin only
  */
 router.delete('/vendors/:id', verifyToken, requireRole('admin'), vendorController.deleteVendor.bind(vendorController));
+
+/**
+ * @route   PATCH /api/admin/vendors/:id/required-documents
+ * @desc    Update vendor required documents
+ * @access  Admin only
+ */
+router.patch('/vendors/:id/required-documents', verifyToken, requireRole('admin'), vendorController.updateRequiredDocuments.bind(vendorController));
+
+/**
+ * @route   PATCH /api/admin/vendors/:id/admin-notes
+ * @desc    Update vendor admin notes
+ * @access  Admin only
+ */
+router.patch('/vendors/:id/admin-notes', verifyToken, requireRole('admin'), vendorController.updateAdminNotes.bind(vendorController));
 
 export default router;

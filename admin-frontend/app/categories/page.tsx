@@ -176,6 +176,7 @@ export default function CategoriesPage() {
                                 src={category.imageUrl}
                                 alt={category.name}
                                 className="w-10 h-10 object-cover rounded"
+                                key={category.id}
                               />
                             </div>
                           ) : (

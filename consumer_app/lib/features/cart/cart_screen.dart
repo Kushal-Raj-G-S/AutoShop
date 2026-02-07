@@ -156,21 +156,37 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildCouponSection(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spaceLarge),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.local_offer_outlined, color: Colors.black87, size: 20),
-              const SizedBox(width: 8),
-              const Text(
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.local_offer_outlined,
+                  color: AppTheme.accentColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
                 'Offers & Benefits',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                style: AppTheme.heading3.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ],
           ),
@@ -178,8 +194,9 @@ class CartScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
-              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.borderColor),
+              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              color: AppTheme.backgroundColor.withValues(alpha: 0.3),
             ),
             child: Row(
               children: [
@@ -188,14 +205,22 @@ class CartScreen extends StatelessWidget {
                     decoration: InputDecoration(
                       hintText: 'Enter Coupon Code',
                       border: InputBorder.none,
-                      hintStyle: TextStyle(color: Colors.grey[400]),
+                      hintStyle: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 14,
+                      ),
                     ),
+                    style: AppTheme.bodyMedium,
                   ),
                 ),
                 TextButton(
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invalid coupon code')),
+                      SnackBar(
+                        content: const Text('Invalid coupon code'),
+                        backgroundColor: AppTheme.errorColor,
+                        behavior: SnackBarBehavior.floating,
+                      ),
                     );
                   },
                   child: Text(
@@ -216,17 +241,22 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildBillDetails(BuildContext context, CartProvider cart) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppTheme.spaceLarge),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Bill Details',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: AppTheme.heading3.copyWith(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 16),
           _buildBillRow('Item Total', '₹${cart.itemTotal.toStringAsFixed(2)}'),
@@ -238,51 +268,61 @@ class CartScreen extends StatelessWidget {
             valueColor: cart.deliveryFee == 0 ? AppTheme.successColor : null,
           ),
           _buildBillRow('Taxes (5%)', '₹${cart.tax.toStringAsFixed(2)}'),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Divider(color: AppTheme.borderColor, thickness: 1),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'To Pay',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: AppTheme.heading2.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 '₹${cart.grandTotal.toStringAsFixed(2)}',
-                style: TextStyle(
+                style: AppTheme.priceStyle.copyWith(
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: Colors.black,
+                  color: AppTheme.primaryColor,
                 ),
               ),
             ],
           ),
           if (cart.deliveryFee == 0) // Free delivery highlight
             Padding(
-              padding: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.only(top: 16),
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppTheme.successColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.successColor.withValues(alpha: 0.1),
+                      AppTheme.successColor.withValues(alpha: 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  border: Border.all(
+                    color: AppTheme.successColor.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.check_circle,
-                      size: 16,
+                      size: 18,
                       color: AppTheme.successColor,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                     Text(
                       'You saved ₹40 on delivery fee!',
-                      style: TextStyle(
+                      style: AppTheme.bodyMedium.copyWith(
                         color: AppTheme.successColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -321,11 +361,12 @@ class CartScreen extends StatelessWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
+            color: Colors.black.withValues(alpha: 0.1),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
           ),
         ],
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Row(
@@ -335,14 +376,18 @@ class CartScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Total',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  'Total Amount',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   '₹${cart.grandTotal.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
+                  style: AppTheme.priceStyle.copyWith(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.primaryColor,
                   ),
                 ),
               ],
@@ -359,17 +404,28 @@ class CartScreen extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
+                  backgroundColor: AppTheme.accentColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
                   ),
-                  elevation: 0,
+                  elevation: 4,
+                  shadowColor: AppTheme.accentColor.withValues(alpha: 0.5),
                 ),
-                child: const Text(
-                  'Proceed to Pay',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Proceed to Checkout',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(Icons.arrow_forward, size: 20),
+                  ],
                 ),
               ),
             ),
@@ -420,21 +476,35 @@ class _CartItemCard extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
           // Image
           ClipRRect(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
             child: CachedNetworkImage(
               imageUrl: cartItem.item.imageUrl ?? '',
-              width: 70,
-              height: 70,
+              width: 80,
+              height: 80,
               fit: BoxFit.cover,
+              placeholder: (c, u) => Container(
+                color: AppTheme.backgroundColor,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.accentColor,
+                  ),
+                ),
+              ),
               errorWidget: (c, u, e) => Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.error),
+                color: AppTheme.backgroundColor,
+                child: Icon(
+                  Icons.shopping_bag_outlined,
+                  color: AppTheme.textSecondary,
+                ),
               ),
             ),
           ),
@@ -443,35 +513,47 @@ class _CartItemCard extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   cartItem.item.name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                  style: AppTheme.heading3.copyWith(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
                   ),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
-                  '₹${cartItem.item.price.toStringAsFixed(2)}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                  '₹${cartItem.item.price.toStringAsFixed(2)} per unit',
+                  style: AppTheme.bodySmall.copyWith(
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 8),
           // Quantity & Total
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppTheme.primaryColor),
-                  borderRadius: BorderRadius.circular(8),
-                  color: AppTheme.primaryColor.withValues(alpha: 0.05),
+                  color: AppTheme.accentColor,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.accentColor.withValues(alpha: 0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     InkWell(
                       onTap: () {
@@ -481,48 +563,48 @@ class _CartItemCard extends StatelessWidget {
                           onRemove();
                         }
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
                         child: Icon(
-                          Icons.remove,
-                          size: 16,
-                          color: AppTheme.primaryColor,
+                          cartItem.quantity == 1
+                              ? Icons.delete_outline
+                              : Icons.remove,
+                          size: 18,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                    Text(
-                      '${cartItem.quantity}',
-                      style: TextStyle(
-                        color: AppTheme.primaryColor,
-                        fontWeight: FontWeight.bold,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        '${cartItem.quantity}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                     ),
                     InkWell(
                       onTap: () => onQuantityChanged(cartItem.quantity + 1),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        child: Icon(
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        child: const Icon(
                           Icons.add,
-                          size: 16,
-                          color: AppTheme.primaryColor,
+                          size: 18,
+                          color: Colors.white,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 '₹${cartItem.totalPrice.toStringAsFixed(2)}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+                style: AppTheme.priceStyle.copyWith(
+                  fontSize: 18,
+                  color: AppTheme.primaryColor,
                 ),
               ),
             ],

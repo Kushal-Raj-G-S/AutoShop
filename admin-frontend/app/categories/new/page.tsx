@@ -17,14 +17,20 @@ export default function NewCategoryPage() {
 
   const createMutation = useMutation({
     mutationFn: createCategory,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-categories"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+    onSuccess: async () => {
       toast({
         title: "Success",
         description: "Category created successfully",
       });
+      // Clear category cache
+      await queryClient.resetQueries({ queryKey: ["admin-categories"] });
+      await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      // Navigate and force refresh
       router.push("/categories");
+      setTimeout(() => {
+        router.refresh();
+        window.location.href = '/categories';
+      }, 100);
     },
     onError: (error: any) => {
       toast({

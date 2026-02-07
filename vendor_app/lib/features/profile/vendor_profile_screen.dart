@@ -36,30 +36,33 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
 
     setState(() {
       if (result['success'] == true) {
-         // Helper to find vendor object (Map containing storeName)
-         Map<String, dynamic>? findVendorData(dynamic data) {
-           if (data is Map<String, dynamic>) {
-             if (data['storeName'] != null) {
-               return data;
-             }
-             
-             for (var key in data.keys) {
-               if (data[key] is Map) {
-                  // Key priorities
-                  if (key == 'vendor' || key == 'data' || key == 'message' || key == 'user') {
-                     final found = findVendorData(data[key]);
-                     if (found != null) return found;
-                  }
-               }
-             }
-           }
-           return null;
-         }
+        // Helper to find vendor object (Map containing storeName)
+        Map<String, dynamic>? findVendorData(dynamic data) {
+          if (data is Map<String, dynamic>) {
+            if (data['storeName'] != null) {
+              return data;
+            }
 
-         final data = findVendorData(result);
-         if (data != null) {
-           _vendorData = data;
-         }
+            for (var key in data.keys) {
+              if (data[key] is Map) {
+                // Key priorities
+                if (key == 'vendor' ||
+                    key == 'data' ||
+                    key == 'message' ||
+                    key == 'user') {
+                  final found = findVendorData(data[key]);
+                  if (found != null) return found;
+                }
+              }
+            }
+          }
+          return null;
+        }
+
+        final data = findVendorData(result);
+        if (data != null) {
+          _vendorData = data;
+        }
       }
       _isLoading = false;
     });
@@ -201,6 +204,133 @@ class _VendorProfileScreenState extends State<VendorProfileScreen> {
                     ),
 
                     const SizedBox(height: 24),
+
+                    // Service Areas
+                    if (_vendorData?['serviceAreas'] != null &&
+                        (_vendorData!['serviceAreas'] as List).isNotEmpty)
+                      _buildSection(
+                        title: 'Service Areas',
+                        isDark: isDark,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.map,
+                                      size: 20,
+                                      color: AppTheme.accentColor,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Pincodes We Serve',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isDark
+                                            ? AppTheme.darkTextSecondary
+                                            : AppTheme.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children:
+                                      (_vendorData!['serviceAreas'] as List)
+                                          .map(
+                                            (area) => Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 6,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                color: AppTheme.accentColor
+                                                    .withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(16),
+                                                border: Border.all(
+                                                  color: AppTheme.accentColor
+                                                      .withValues(alpha: 0.3),
+                                                ),
+                                              ),
+                                              child: Text(
+                                                area.toString(),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: AppTheme.accentColor,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    if (_vendorData?['serviceAreas'] != null &&
+                        (_vendorData!['serviceAreas'] as List).isNotEmpty)
+                      const SizedBox(height: 24),
+
+                    // Bank Details
+                    if (_vendorData?['bankDetails'] != null)
+                      _buildSection(
+                        title: 'Bank Details (KYC)',
+                        isDark: isDark,
+                        children: [
+                          if (_vendorData!['bankDetails']['accountHolderName'] !=
+                              null)
+                            _buildInfoRow(
+                              icon: Icons.person,
+                              label: 'Account Holder Name',
+                              value:
+                                  _vendorData!['bankDetails']['accountHolderName'],
+                              isDark: isDark,
+                            ),
+                          if (_vendorData!['bankDetails']['accountNumber'] !=
+                              null)
+                            _buildInfoRow(
+                              icon: Icons.account_balance,
+                              label: 'Account Number',
+                              value:
+                                  _vendorData!['bankDetails']['accountNumber'],
+                              isDark: isDark,
+                            ),
+                          if (_vendorData!['bankDetails']['ifscCode'] != null)
+                            _buildInfoRow(
+                              icon: Icons.code,
+                              label: 'IFSC Code',
+                              value: _vendorData!['bankDetails']['ifscCode'],
+                              isDark: isDark,
+                            ),
+                          if (_vendorData!['bankDetails']['bankName'] != null)
+                            _buildInfoRow(
+                              icon: Icons.account_balance_wallet,
+                              label: 'Bank Name',
+                              value: _vendorData!['bankDetails']['bankName'],
+                              isDark: isDark,
+                            ),
+                          if (_vendorData!['bankDetails']['branchName'] != null)
+                            _buildInfoRow(
+                              icon: Icons.location_city,
+                              label: 'Branch Name',
+                              value: _vendorData!['bankDetails']['branchName'],
+                              isDark: isDark,
+                            ),
+                        ],
+                      ),
+
+                    if (_vendorData?['bankDetails'] != null)
+                      const SizedBox(height: 24),
 
                     // Theme Toggle
                     _buildSection(

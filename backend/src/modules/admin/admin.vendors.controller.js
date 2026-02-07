@@ -23,6 +23,12 @@ class AdminVendorsController {
   async getVendorById(req, res) {
     try {
       const { id } = req.params;
+      
+      // Validate ID
+      if (!id || isNaN(parseInt(id))) {
+        return sendResponse(res, 400, false, 'Valid vendor ID is required');
+      }
+      
       const vendor = await adminVendorsService.getVendorById(parseInt(id));
       return sendResponse(res, 200, true, 'Vendor details fetched successfully', { vendor });
     } catch (error) {

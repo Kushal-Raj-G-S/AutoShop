@@ -10,13 +10,45 @@
 
 import { db } from '../../../db/index.js';
 import { orders, orderAssignments } from '../schema.js';
-import { vendors } from '../../../db/schema.js';
+import { vendors, systemConfig } from '../../../db/schema.js';
 import { eq, and, sql, inArray } from 'drizzle-orm';
 
 class AssignmentService {
   constructor(redisClient, socketManager) {
     this.redis = redisClient;
     this.io = socketManager;
+    console.log('🔍 AssignmentService created - Redis:', !!redisClient, 'IO:', !!socketManager);
+    console.log('🔍 IO type:', typeof socketManager, 'Has to method:', typeof socketManager?.to);
+  }
+
+  /**
+   * Get configuration value from database
+   */
+  async getConfigValue(key, defaultValue) {
+    try {
+      const [config] = await db
+        .select()
+        .from(systemConfig)
+        .where(eq(systemConfig.key, key))
+        .limit(1);
+
+      if (!config) {
+        return defaultValue;
+      }
+
+      // Parse value based on data type
+      switch (config.dataType) {
+        case 'number':
+          return Number(config.value);
+        case 'boolean':
+          return config.value === 'true';
+        default:
+          return config.value;
+      }
+    } catch (error) {
+      console.warn(`⚠️ Failed to get config ${key}, using default:`, defaultValue);
+      return defaultValue;
+    }
   }
 
   /**
@@ -28,13 +60,13 @@ class AssignmentService {
    * @returns {Promise<Object>} Assignment result
    */
   async startAssignment(orderId, options = {}) {
-    const {
-      maxRadius = process.env.ORDER_ASSIGNMENT_MAX_RADIUS_KM || 10,
-      parallelPushCount = process.env.ORDER_ASSIGNMENT_BATCH_SIZE || 3,
-      timeoutSeconds = process.env.ORDER_ASSIGNMENT_TIMEOUT || 120,
-    } = options;
+    // Get configuration from database (with fallbacks)
+    const maxRadius = options.maxRadius || await this.getConfigValue('assignment_max_radius', 10);
+    const parallelPushCount = options.parallelPushCount || await this.getConfigValue('assignment_parallel_push_count', 3);
+    const timeoutSeconds = options.timeoutSeconds || await this.getConfigValue('assignment_timeout_seconds', 120);
 
     console.log(`📋 Starting assignment for order ${orderId}`);
+    console.log(`⚙️ Config: radius=${maxRadius}km, vendors=${parallelPushCount}, timeout=${timeoutSeconds}s`);
 
     // 1. Fetch order details
     const [order] = await db

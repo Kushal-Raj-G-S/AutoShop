@@ -10,6 +10,7 @@ router.get('/categories', categoryController.listCategoriesPublic);
 // Admin routes
 router.post('/admin/categories', verifyToken, requireRole('admin'), categoryController.createCategory);
 router.get('/admin/categories', verifyToken, requireRole('admin'), categoryController.listCategoriesAdmin);
+router.get('/admin/categories/:id', verifyToken, requireRole('admin'), categoryController.getCategoryById);
 router.put('/admin/categories/:id', verifyToken, requireRole('admin'), categoryController.updateCategory);
 router.delete('/admin/categories/:id', verifyToken, requireRole('admin'), categoryController.deleteCategory);
 

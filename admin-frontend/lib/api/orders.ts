@@ -101,6 +101,29 @@ export const cancelOrder = async (orderId: string, reason?: string) => {
   return response.data;
 };
 
+export interface NearbyVendor {
+  id: number;
+  storeName: string;
+  ownerName: string;
+  phone: string;
+  storeAddress: string;
+  latitude: number;
+  longitude: number;
+  distance: string;
+}
+
+export const getNearbyVendors = async (orderId: string, maxRadius?: number) => {
+  const response = await axiosInstance.get(`/admin/orders/${orderId}/nearby-vendors`, {
+    params: { maxRadius },
+  });
+  return response.data.data.vendors as NearbyVendor[];
+};
+
+export const triggerAutoAssignment = async (orderId: string) => {
+  const response = await axiosInstance.post(`/admin/orders/${orderId}/auto-assign`);
+  return response.data;
+};
+
 export const getDashboardStats = async () => {
   const response = await axiosInstance.get("/admin/stats");
   // Backend returns {success, message, data: {stats object}}

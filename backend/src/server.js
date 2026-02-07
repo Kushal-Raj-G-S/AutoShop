@@ -5,6 +5,8 @@ import { createClient } from 'redis';
 import authRoutes from './modules/auth/auth.routes.js';
 import vendorRoutes from './modules/vendor/vendor.routes.js';
 import categoryRoutes from './modules/category/category.routes.js';
+import subcategoryRoutes from './modules/subcategory/subcategory.routes.js';
+import unitRoutes from './modules/unit/unit.routes.js';
 import itemRoutes from './modules/items/item.routes.js';
 import orderRoutes from './modules/orders/order.routes.js';
 import assignmentRoutes from './modules/orders/assignment/assignment.routes.js';
@@ -12,6 +14,7 @@ import addressRoutes from './modules/addresses/routes.js';
 import adminStatsRoutes from './modules/admin/admin.stats.routes.js';
 import adminOrdersRoutes from './modules/admin/admin.orders.routes.js';
 import adminVendorsRoutes from './modules/admin/admin.vendors.routes.js';
+import adminConfigRoutes from './modules/admin/admin.config.routes.js';
 import { handleRazorpayWebhook, captureRawBody } from './modules/orders/razorpay.webhook.js';
 import { initializeSocket } from './socket.js';
 
@@ -68,6 +71,8 @@ app.get('/health/db', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api', categoryRoutes);
+app.use('/api', subcategoryRoutes);
+app.use('/api', unitRoutes);
 app.use('/api', itemRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', assignmentRoutes);
@@ -77,6 +82,7 @@ app.use('/api/addresses', addressRoutes);
 app.use('/api/admin', adminStatsRoutes);
 app.use('/api/admin', adminOrdersRoutes);
 app.use('/api/admin', adminVendorsRoutes);
+app.use('/api/admin', adminConfigRoutes);
 
 // Razorpay webhook (must use raw body for signature verification)
 app.post('/api/webhooks/razorpay',
@@ -130,7 +136,7 @@ async function startServer() {
         
         // Initialize Socket.io with Redis
         console.log('🔌 Initializing Socket.io...');
-        io = initializeSocket(httpServer, redis);
+        io = await initializeSocket(httpServer, redis);
         console.log('✅ Socket.io initialized with Redis');
         
       } catch (redisError) {
@@ -141,6 +147,11 @@ async function startServer() {
     } else {
       console.warn('⚠️  REDIS_URL not configured');
       console.warn('⚠️  Running without Redis (order acceptance locking disabled)');
+      
+      // Initialize Socket.io without Redis
+      console.log('🔌 Initializing Socket.io...');
+      io = await initializeSocket(httpServer, null);
+      console.log('✅ Socket.io initialized without Redis');
     }
     
     // Make io and redis available in routes (can be null)

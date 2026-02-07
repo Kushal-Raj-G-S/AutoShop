@@ -84,6 +84,27 @@ class CategoryController {
     }
   }
 
+  // Get category by ID (Admin)
+  async getCategoryById(req, res) {
+    try {
+      const { id } = req.params;
+
+      // Validation
+      if (!id || isNaN(id)) {
+        return sendResponse(res, 400, false, 'Valid category ID is required');
+      }
+
+      const category = await categoryService.getCategoryById(parseInt(id));
+
+      return sendResponse(res, 200, true, 'Category fetched successfully', {
+        category,
+      });
+    } catch (error) {
+      console.error('Get Category Error:', error);
+      return sendResponse(res, 404, false, error.message || 'Category not found');
+    }
+  }
+
   // List all categories (Admin)
   async listCategoriesAdmin(req, res) {
     try {

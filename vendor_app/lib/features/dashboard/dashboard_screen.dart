@@ -54,37 +54,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
       debugPrint('🔄 Dashboard: Fetching profile...');
       final vendorResult = await _vendorApi.getProfile();
       debugPrint('📦 Dashboard: Profile result: $vendorResult');
-      
+
       if (vendorResult['success'] == true) {
-         // Helper to find vendor object
-         Map<String, dynamic>? findVendorData(dynamic data) {
-           if (data is Map<String, dynamic>) {
-             if (data['storeName'] != null) {
-               return data;
-             }
-             for (var key in data.keys) {
-               if (data[key] is Map) {
-                  if (key == 'vendor' || key == 'data' || key == 'message' || key == 'user') {
-                     final found = findVendorData(data[key]);
-                     if (found != null) return found;
-                  }
-               }
-             }
-           }
-           return null;
-         }
-         
-         final data = findVendorData(vendorResult);
-         if (data != null) {
-           _vendorData = data;
-         }
+        // Helper to find vendor object
+        Map<String, dynamic>? findVendorData(dynamic data) {
+          if (data is Map<String, dynamic>) {
+            if (data['storeName'] != null) {
+              return data;
+            }
+            for (var key in data.keys) {
+              if (data[key] is Map) {
+                if (key == 'vendor' ||
+                    key == 'data' ||
+                    key == 'message' ||
+                    key == 'user') {
+                  final found = findVendorData(data[key]);
+                  if (found != null) return found;
+                }
+              }
+            }
+          }
+          return null;
+        }
+
+        final data = findVendorData(vendorResult);
+        if (data != null) {
+          _vendorData = data;
+        }
       }
 
       // Load stats
       debugPrint('🔄 Dashboard: Fetching stats...');
       final statsResult = await _ordersApi.getDashboardStats();
       debugPrint('📦 Dashboard: Stats result: $statsResult');
-      
+
       if (statsResult['success'] == true) {
         _stats = statsResult['data'];
       }
@@ -204,27 +207,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: const Icon(Icons.logout),
             tooltip: 'Logout',
             onPressed: () {
-               // Show confirmation dialog
-               showDialog(
-                 context: context,
-                 builder: (context) => AlertDialog(
-                   title: const Text('Logout'),
-                   content: const Text('Are you sure you want to logout?'),
-                   actions: [
-                     TextButton(
-                       onPressed: () => Navigator.pop(context),
-                       child: const Text('Cancel'),
-                     ),
-                     TextButton(
-                       onPressed: () {
-                         Navigator.pop(context);
-                         _logout();
-                       },
-                       child: const Text('Logout', style: TextStyle(color: Colors.red)),
-                     ),
-                   ],
-                 ),
-               );
+              // Show confirmation dialog
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Logout'),
+                  content: const Text('Are you sure you want to logout?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _logout();
+                      },
+                      child: const Text(
+                        'Logout',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
           const SizedBox(width: 8),
@@ -401,86 +407,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildActionTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required bool isDark,
-    bool isDestructive = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isDark ? AppTheme.darkSurface : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isDestructive
-                ? AppTheme.errorColor.withValues(alpha: 0.3)
-                : (isDark ? AppTheme.darkBorder : AppTheme.borderColor),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isDestructive
-                    ? AppTheme.errorColor.withValues(alpha: 0.1)
-                    : AppTheme.accentColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: isDestructive
-                    ? AppTheme.errorColor
-                    : AppTheme.accentColor,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: isDestructive
-                          ? AppTheme.errorColor
-                          : (isDark
-                                ? AppTheme.darkTextPrimary
-                                : AppTheme.textPrimary),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: isDark
-                          ? AppTheme.darkTextSecondary
-                          : AppTheme.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right,
-              color: isDark
-                  ? AppTheme.darkTextSecondary
-                  : AppTheme.textSecondary,
-            ),
-          ],
-        ),
       ),
     );
   }

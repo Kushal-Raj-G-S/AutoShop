@@ -170,7 +170,8 @@ class _CategoryItemsScreenState extends State<CategoryItemsScreen> {
           // Success state - display items
           final items = snapshot.data!;
           return ListView.builder(
-            padding: EdgeInsets.all(AppTheme.spaceMedium),
+            padding: EdgeInsets.all(AppTheme.spaceLarge),
+            physics: const BouncingScrollPhysics(),
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
@@ -183,15 +184,19 @@ class _CategoryItemsScreenState extends State<CategoryItemsScreen> {
   }
 
   Widget _buildItemCard(ItemModel item) {
-    return Card(
-      margin: EdgeInsets.only(bottom: AppTheme.spaceMedium),
-      elevation: AppTheme.elevationLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+    return Container(
+      margin: EdgeInsets.only(bottom: AppTheme.spaceLarge),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.cardShadow,
+        border: Border.all(
+          color: AppTheme.borderColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
       ),
       child: InkWell(
         onTap: () {
-          // Navigate to item details screen
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -199,100 +204,148 @@ class _CategoryItemsScreenState extends State<CategoryItemsScreen> {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
         child: Padding(
-          padding: EdgeInsets.all(AppTheme.spaceMedium),
+          padding: EdgeInsets.all(AppTheme.spaceLarge),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Item Image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
-                child: item.imageUrl != null && item.imageUrl!.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: item.imageUrl!,
-                        width: 80,
-                        height: 80,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          width: 80,
-                          height: 80,
-                          color: AppTheme.surfaceColor,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppTheme.primaryColor,
+              // Item Image with Hero animation
+              Hero(
+                tag: 'item-${item.id}',
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                  child: item.imageUrl != null && item.imageUrl!.isNotEmpty
+                      ? CachedNetworkImage(
+                          imageUrl: item.imageUrl!,
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => Container(
+                            width: 100,
+                            height: 100,
+                            color: AppTheme.backgroundColor,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppTheme.accentColor,
+                              ),
                             ),
                           ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          width: 80,
-                          height: 80,
-                          color: AppTheme.surfaceColor,
+                          errorWidget: (context, url, error) => Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppTheme.primaryColor.withValues(alpha: 0.1),
+                                  AppTheme.accentColor.withValues(alpha: 0.1),
+                                ],
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: AppTheme.textSecondary,
+                              size: 40,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryColor.withValues(alpha: 0.1),
+                                AppTheme.accentColor.withValues(alpha: 0.1),
+                              ],
+                            ),
+                          ),
                           child: Icon(
-                            Icons.broken_image,
+                            Icons.shopping_bag_outlined,
                             color: AppTheme.textSecondary,
+                            size: 40,
                           ),
                         ),
-                      )
-                    : Container(
-                        width: 80,
-                        height: 80,
-                        color: AppTheme.surfaceColor,
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
+                ),
               ),
-              SizedBox(width: AppTheme.spaceMedium),
+              SizedBox(width: AppTheme.spaceLarge),
 
               // Item Details
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Item Name
-                    Text(
-                      item.name,
-                      style: AppTheme.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Item Name
+                        Text(
+                          item.name,
+                          style: AppTheme.heading3.copyWith(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        SizedBox(height: AppTheme.spaceSmall),
+
+                        // Stock Status Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: item.isInStock
+                                ? AppTheme.successColor.withValues(alpha: 0.1)
+                                : AppTheme.errorColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: item.isInStock
+                                  ? AppTheme.successColor
+                                  : AppTheme.errorColor,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                item.isInStock
+                                    ? Icons.check_circle
+                                    : Icons.cancel,
+                                size: 14,
+                                color: item.isInStock
+                                    ? AppTheme.successColor
+                                    : AppTheme.errorColor,
+                              ),
+                              SizedBox(width: AppTheme.spaceXSmall),
+                              Text(
+                                item.stockStatus,
+                                style: AppTheme.bodySmall.copyWith(
+                                  color: item.isInStock
+                                      ? AppTheme.successColor
+                                      : AppTheme.errorColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: AppTheme.spaceXSmall),
+                    SizedBox(height: AppTheme.spaceMedium),
 
                     // Price
                     Text(
                       '₹${item.price.toStringAsFixed(2)}',
-                      style: AppTheme.heading3.copyWith(
+                      style: AppTheme.priceStyle.copyWith(
+                        fontSize: 20,
                         color: AppTheme.primaryColor,
                       ),
-                    ),
-                    SizedBox(height: AppTheme.spaceXSmall),
-
-                    // Stock Status
-                    Row(
-                      children: [
-                        Icon(
-                          item.isInStock ? Icons.check_circle : Icons.cancel,
-                          size: 16,
-                          color: item.isInStock
-                              ? AppTheme.successColor
-                              : AppTheme.errorColor,
-                        ),
-                        SizedBox(width: AppTheme.spaceXSmall),
-                        Text(
-                          item.stockStatus,
-                          style: AppTheme.bodySmall.copyWith(
-                            color: item.isInStock
-                                ? AppTheme.successColor
-                                : AppTheme.errorColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -300,8 +353,8 @@ class _CategoryItemsScreenState extends State<CategoryItemsScreen> {
 
               // Arrow Icon
               Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
+                Icons.arrow_forward_ios_rounded,
+                size: 18,
                 color: AppTheme.textSecondary,
               ),
             ],

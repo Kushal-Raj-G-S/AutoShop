@@ -120,14 +120,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadCategories,
-      color: AppTheme.primaryColor,
+      color: AppTheme.accentColor,
       child: GridView.builder(
-        padding: EdgeInsets.all(AppTheme.spaceMedium),
+        padding: EdgeInsets.all(AppTheme.spaceLarge),
+        physics: const BouncingScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.85,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 0.82,
         ),
         itemCount: _categories.length,
         itemBuilder: (context, index) {
@@ -151,10 +152,15 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           ),
         );
       },
-      child: Card(
-        elevation: AppTheme.elevationLow,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+          boxShadow: AppTheme.cardShadow,
+          border: Border.all(
+            color: AppTheme.borderColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -164,8 +170,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               flex: 3,
               child: ClipRRect(
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(AppTheme.radiusMedium),
-                  topRight: Radius.circular(AppTheme.radiusMedium),
+                  topLeft: Radius.circular(AppTheme.radiusLarge),
+                  topRight: Radius.circular(AppTheme.radiusLarge),
                 ),
                 child:
                     category.imageUrl != null && category.imageUrl!.isNotEmpty
@@ -173,28 +179,46 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                         imageUrl: category.imageUrl!,
                         fit: BoxFit.cover,
                         placeholder: (context, url) => Container(
-                          color: AppTheme.surfaceColor,
+                          color: AppTheme.backgroundColor,
                           child: Center(
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppTheme.primaryColor,
+                              color: AppTheme.accentColor,
                             ),
                           ),
                         ),
                         errorWidget: (context, url, error) => Container(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryColor.withValues(alpha: 0.1),
+                                AppTheme.accentColor.withValues(alpha: 0.1),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                          ),
                           child: Icon(
-                            Icons.category,
-                            size: 40,
+                            Icons.category_rounded,
+                            size: 48,
                             color: AppTheme.primaryColor,
                           ),
                         ),
                       )
                     : Container(
-                        color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryColor.withValues(alpha: 0.1),
+                              AppTheme.accentColor.withValues(alpha: 0.1),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
                         child: Icon(
-                          Icons.category,
-                          size: 40,
+                          Icons.category_rounded,
+                          size: 48,
                           color: AppTheme.primaryColor,
                         ),
                       ),
@@ -204,15 +228,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
             Expanded(
               flex: 2,
               child: Padding(
-                padding: EdgeInsets.all(AppTheme.spaceSmall),
+                padding: EdgeInsets.all(AppTheme.spaceMedium),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       category.name,
-                      style: AppTheme.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
+                      style: AppTheme.heading3.copyWith(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -222,6 +247,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       category.description,
                       style: AppTheme.bodySmall.copyWith(
                         color: AppTheme.textSecondary,
+                        height: 1.3,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,

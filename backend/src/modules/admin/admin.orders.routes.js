@@ -22,11 +22,25 @@ router.get('/orders/recent', verifyToken, adminOrdersController.getRecentOrders.
 router.get('/orders/:id', verifyToken, adminOrdersController.getOrderById.bind(adminOrdersController));
 
 /**
+ * @route   GET /api/admin/orders/:id/nearby-vendors
+ * @desc    Get nearby vendors for manual assignment
+ * @access  Admin only
+ */
+router.get('/orders/:id/nearby-vendors', verifyToken, adminOrdersController.getNearbyVendors.bind(adminOrdersController));
+
+/**
  * @route   POST /api/admin/orders/:id/force-assign
  * @desc    Force assign order to a vendor
  * @access  Admin only
  */
 router.post('/orders/:id/force-assign', verifyToken, adminOrdersController.forceAssignOrder.bind(adminOrdersController));
+
+/**
+ * @route   POST /api/admin/orders/:id/auto-assign
+ * @desc    Trigger automatic vendor assignment
+ * @access  Admin only
+ */
+router.post('/orders/:id/auto-assign', verifyToken, adminOrdersController.triggerAutoAssignment.bind(adminOrdersController));
 
 /**
  * @route   POST /api/admin/orders/:id/cancel

@@ -243,7 +243,26 @@ class AdminOrdersService {
    */
   async forceAssignOrder(orderId, vendorId) {
     try {
-      // Verify vendor exists
+      console.log(`🔧 Force assigning order ${orderId} to vendor ${vendorId}`);
+      
+      // Get current order state to check for reassignment
+      const [currentOrder] = await db
+        .select({
+          id: orders.id,
+          assignedVendorId: orders.assignedVendorId,
+          status: orders.status,
+        })
+        .from(orders)
+        .where(eq(orders.id, orderId));
+
+      if (!currentOrder) {
+        throw new Error('Order not found');
+      }
+
+      const isReassignment = currentOrder.assignedVendorId !== null && 
+                            currentOrder.assignedVendorId !== vendorId;
+      
+      // Verify new vendor exists
       const [vendor] = await db
         .select()
         .from(vendors)
@@ -251,6 +270,15 @@ class AdminOrdersService {
 
       if (!vendor) {
         throw new Error('Vendor not found');
+      }
+
+      // Get previous vendor info if this is a reassignment
+      let previousVendor = null;
+      if (isReassignment) {
+        [previousVendor] = await db
+          .select({ storeName: vendors.storeName, id: vendors.id })
+          .from(vendors)
+          .where(eq(vendors.id, currentOrder.assignedVendorId));
       }
 
       // Update order
@@ -264,10 +292,12 @@ class AdminOrdersService {
         .where(eq(orders.id, orderId))
         .returning();
 
-      if (!updatedOrder) {
-        throw new Error('Order not found');
+      if (isReassignment) {
+        console.log(`🔄 Order ${orderId} REASSIGNED from vendor ${previousVendor?.storeName} (ID: ${previousVendor?.id}) to ${vendor.storeName} (ID: ${vendorId})`);
+      } else {
+        console.log(`✅ Order ${orderId} assigned with status: ${updatedOrder.status}`);
       }
-
+      
       return updatedOrder;
     } catch (error) {
       console.error('Error in forceAssignOrder:', error);
@@ -297,6 +327,117 @@ class AdminOrdersService {
       return updatedOrder;
     } catch (error) {
       console.error('Error in cancelOrder:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Prepare order for assignment (update status)
+   */
+  async prepareOrderForAssignment(orderId) {
+    try {
+      const [order] = await db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, orderId))
+        .limit(1);
+
+      if (!order) {
+        throw new Error('Order not found');
+      }
+
+      // Update to awaiting_assignment if not already in a valid assignment state
+      const validStatuses = ['awaiting_assignment', 'payment_verified', 'paid'];
+      if (!validStatuses.includes(order.status)) {
+        await db
+          .update(orders)
+          .set({
+            status: 'awaiting_assignment',
+            updatedAt: new Date(),
+          })
+          .where(eq(orders.id, orderId));
+        
+        console.log(`✅ Order ${orderId} status updated to awaiting_assignment`);
+      }
+
+      return order;
+    } catch (error) {
+      console.error('Error in prepareOrderForAssignment:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Trigger auto-assignment for an order (deprecated - use controller directly)
+   */
+  async triggerAutoAssignment(orderId, options = {}) {
+    // This method is now just a placeholder
+    // The actual assignment is triggered in the controller
+    return {
+      orderId,
+      status: 'awaiting_assignment',
+      message: 'Order prepared for auto-assignment',
+    };
+  }
+
+  /**
+   * Get nearby vendors for an order (for manual assignment)
+   */
+  async getNearbyVendorsForOrder(orderId, maxRadius = 10) {
+    try {
+      // Get order details
+      const [order] = await db
+        .select({
+          deliveryLatitude: orders.deliveryLatitude,
+          deliveryLongitude: orders.deliveryLongitude,
+        })
+        .from(orders)
+        .where(eq(orders.id, orderId))
+        .limit(1);
+
+      if (!order) {
+        throw new Error('Order not found');
+      }
+
+      // Haversine formula for distance calculation
+      const distanceFormula = sql`(
+        6371 * acos(
+          cos(radians(${order.deliveryLatitude})) 
+          * cos(radians(${vendors.latitude})) 
+          * cos(radians(${vendors.longitude}) - radians(${order.deliveryLongitude})) 
+          + sin(radians(${order.deliveryLatitude})) 
+          * sin(radians(${vendors.latitude}))
+        )
+      )`;
+
+      // Get nearby approved vendors
+      const nearbyVendors = await db
+        .select({
+          id: vendors.id,
+          storeName: vendors.storeName,
+          ownerName: vendors.ownerName,
+          phone: vendors.phone,
+          storeAddress: vendors.storeAddress,
+          latitude: vendors.latitude,
+          longitude: vendors.longitude,
+          distance: distanceFormula,
+        })
+        .from(vendors)
+        .where(
+          and(
+            eq(vendors.status, 'approved'),
+            sql`${distanceFormula} <= ${maxRadius}`
+          )
+        )
+        .orderBy(distanceFormula)
+        .limit(20);
+
+      return nearbyVendors.map(v => ({
+        ...v,
+        distance: Number(v.distance).toFixed(2),
+      }));
+    } catch (error) {
+      console.error('Error in getNearbyVendorsForOrder:', error);
       throw error;
     }
   }

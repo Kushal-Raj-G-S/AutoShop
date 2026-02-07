@@ -265,9 +265,15 @@ Engine Oil 5W-30,EO-5W30,Mobil,1,Engine Care,Synthetic engine oil 5 liters,1200,
               )}
 
               <div className="flex gap-4">
-                <Link href="/items">
-                  <Button>View Items</Button>
-                </Link>
+                <Button
+                  onClick={async () => {
+                    await queryClient.invalidateQueries({ queryKey: ["items"] });
+                    router.push("/items");
+                    router.refresh();
+                  }}
+                >
+                  View Items
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
