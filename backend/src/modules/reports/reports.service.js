@@ -185,20 +185,18 @@ class ReportsService {
    */
   async generateInventoryReport() {
     try {
-      // Get all items with vendor and category info
+      // Get all items with category and unit info (vendors are not directly related to items)
       const inventoryData = await db
         .select({
           id: items.id,
           name: items.name,
           description: items.description,
           categoryId: items.categoryId,
-          categoryName: sql`categories.name`.as('categoryName'),
+          categoryName: categories.name,
           subCategoryId: items.subCategoryId,
-          subCategoryName: sql`sub_categories.name`.as('subCategoryName'),
+          subCategoryName: subCategories.name,
           unitId: items.unitId,
-          unitName: sql`units.name`.as('unitName'),
-          vendorId: items.vendorId,
-          vendorName: sql`vendors.store_name`.as('vendorName'),
+          unitName: units.name,
           price: items.price,
           stock: items.stock,
           isActive: items.isActive,
@@ -206,10 +204,9 @@ class ReportsService {
           updatedAt: items.updatedAt,
         })
         .from(items)
-        .leftJoin(categories, sql`items.category_id = categories.id`)
-        .leftJoin(subCategories, sql`items.sub_category_id = sub_categories.id`)
-        .leftJoin(units, sql`items.unit_id = units.id`)
-        .leftJoin(vendors, sql`items.vendor_id = vendors.id`)
+        .leftJoin(categories, eq(items.categoryId, categories.id))
+        .leftJoin(subCategories, eq(items.subCategoryId, subCategories.id))
+        .leftJoin(units, eq(items.unitId, units.id))
         .orderBy(items.name);
 
       // Calculate statistics
@@ -224,7 +221,6 @@ class ReportsService {
           0
         ),
         byCategory: {},
-        byVendor: {},
       };
 
       // Group by category
@@ -240,21 +236,6 @@ class ReportsService {
         summary.byCategory[category].count += 1;
         summary.byCategory[category].totalStock += item.stock || 0;
         summary.byCategory[category].totalValue += parseFloat(item.price || 0) * (item.stock || 0);
-      });
-
-      // Group by vendor
-      inventoryData.forEach((item) => {
-        const vendor = item.vendorName || 'No Vendor';
-        if (!summary.byVendor[vendor]) {
-          summary.byVendor[vendor] = {
-            count: 0,
-            totalStock: 0,
-            totalValue: 0,
-          };
-        }
-        summary.byVendor[vendor].count += 1;
-        summary.byVendor[vendor].totalStock += item.stock || 0;
-        summary.byVendor[vendor].totalValue += parseFloat(item.price || 0) * (item.stock || 0);
       });
 
       return {
@@ -308,13 +289,7 @@ class ReportsService {
             .from(orders)
             .where(and(...orderConditions));
 
-          // Get vendor items
-          const vendorItems = await db
-            .select()
-            .from(items)
-            .where(eq(items.vendorId, vendor.id));
-
-          // Calculate stats
+          // Calculate stats (items are not directly linked to vendors in current schema)
           const stats = {
             totalOrders: vendorOrders.length,
             completedOrders: vendorOrders.filter((o) => o.status === 'completed').length,
@@ -323,9 +298,6 @@ class ReportsService {
               ['pending_payment', 'awaiting_assignment', 'assigned', 'vendor_accepted', 'in_progress'].includes(o.status)
             ).length,
             totalRevenue: vendorOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0),
-            totalItems: vendorItems.length,
-            activeItems: vendorItems.filter((i) => i.isActive === 'true').length,
-            outOfStockItems: vendorItems.filter((i) => i.stock === 0).length,
             averageOrderValue:
               vendorOrders.length > 0
                 ? vendorOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0) / vendorOrders.length
@@ -349,7 +321,14 @@ class ReportsService {
         activeVendors: vendorReports.filter((v) => v.status === 'approved').length,
         totalOrders: vendorReports.reduce((sum, v) => sum + v.totalOrders, 0),
         totalRevenue: vendorReports.reduce((sum, v) => sum + v.totalRevenue, 0),
-        totalItems: vendorReports.reduce((sum, v) => sum + v.totalItems, 0),
+        averageOrdersPerVendor:
+          vendorReports.length > 0
+            ? vendorReports.reduce((sum, v) => sum + v.totalOrders, 0) / vendorReports.length
+            : 0,
+        averageRevenuePerVendor:
+          vendorReports.length > 0
+            ? vendorReports.reduce((sum, v) => sum + v.totalRevenue, 0) / vendorReports.length
+            : 0,
       };
 
       return {
