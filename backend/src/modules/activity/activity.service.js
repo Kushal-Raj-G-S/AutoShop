@@ -81,7 +81,7 @@ class ActivityLogService {
       const [{ count }] = await countQuery;
 
       // Get paginated logs with user info
-      const query = db
+      let query = db
         .select({
           id: activityLogs.id,
           userId: activityLogs.userId,
@@ -98,12 +98,18 @@ class ActivityLogService {
           createdAt: activityLogs.createdAt,
         })
         .from(activityLogs)
-        .leftJoin(users, eq(activityLogs.userId, users.id))
+        .leftJoin(users, eq(activityLogs.userId, users.id));
+
+      // Apply filters if any
+      if (whereClause) {
+        query = query.where(whereClause);
+      }
+
+      // Apply ordering and pagination
+      const logs = await query
         .orderBy(desc(activityLogs.createdAt))
         .limit(limit)
         .offset(offset);
-
-      const logs = whereClause ? await query.where(whereClause) : await query;
 
       return {
         logs,
