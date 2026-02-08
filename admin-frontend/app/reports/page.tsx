@@ -182,7 +182,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.summary.totalOrders}</div>
+                  <div className="text-2xl font-bold">{data.summary.totalOrders || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -190,7 +190,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalRevenue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalRevenue || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -198,7 +198,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Delivery Fees</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalDeliveryFees.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalDeliveryFees || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -206,7 +206,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Tax (GST)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalTax.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalTax || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -277,7 +277,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.summary.totalOrders}</div>
+                  <div className="text-2xl font-bold">{data.summary.totalOrders || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -285,7 +285,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalRevenue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalRevenue || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -293,7 +293,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Platform Fees</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalPlatformFees.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalPlatformFees || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -301,7 +301,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Net Payouts</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalNetPayouts.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalNetPayouts || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -340,10 +340,10 @@ export default function ReportsPage() {
                         <TableRow key={vendor.vendorId}>
                           <TableCell className="font-medium">{vendor.vendorName}</TableCell>
                           <TableCell>{vendor.vendorPhone}</TableCell>
-                          <TableCell>{vendor.totalOrders}</TableCell>
-                          <TableCell>₹{vendor.totalRevenue.toFixed(2)}</TableCell>
-                          <TableCell>₹{vendor.totalPlatformFees.toFixed(2)}</TableCell>
-                          <TableCell className="font-semibold">₹{vendor.netPayout.toFixed(2)}</TableCell>
+                          <TableCell>{vendor.totalOrders || 0}</TableCell>
+                          <TableCell>₹{(vendor.totalRevenue || 0).toFixed(2)}</TableCell>
+                          <TableCell>₹{(vendor.totalPlatformFees || 0).toFixed(2)}</TableCell>
+                          <TableCell className="font-semibold">₹{(vendor.netPayout || 0).toFixed(2)}</TableCell>
                         </TableRow>
                       ))
                     ) : (
@@ -370,7 +370,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Items</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.summary.totalItems}</div>
+                  <div className="text-2xl font-bold">{data.summary.totalItems || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -378,7 +378,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Active</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{data.summary.activeItems}</div>
+                  <div className="text-2xl font-bold text-green-600">{data.summary.activeItems || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -386,7 +386,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">{data.summary.outOfStock}</div>
+                  <div className="text-2xl font-bold text-red-600">{data.summary.outOfStock || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -394,7 +394,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Low Stock</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">{data.summary.lowStock}</div>
+                  <div className="text-2xl font-bold text-orange-600">{data.summary.lowStock || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -402,7 +402,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Stock Value</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalStockValue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalStockValue || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -471,7 +471,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Vendors</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.summary.totalVendors}</div>
+                  <div className="text-2xl font-bold">{data.summary.totalVendors || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -479,7 +479,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Active Vendors</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{data.summary.activeVendors}</div>
+                  <div className="text-2xl font-bold text-green-600">{data.summary.activeVendors || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -487,7 +487,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{data.summary.totalOrders}</div>
+                  <div className="text-2xl font-bold">{data.summary.totalOrders || 0}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -495,7 +495,7 @@ export default function ReportsPage() {
                   <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalRevenue.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{(data.summary.totalRevenue || 0).toFixed(2)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -534,10 +534,10 @@ export default function ReportsPage() {
                         <TableRow key={vendor.vendorId}>
                           <TableCell className="font-medium">{vendor.vendorName}</TableCell>
                           <TableCell>{vendor.vendorPhone}</TableCell>
-                          <TableCell>{vendor.totalOrders}</TableCell>
-                          <TableCell>{vendor.completedOrders}</TableCell>
-                          <TableCell>₹{vendor.totalRevenue.toFixed(2)}</TableCell>
-                          <TableCell>{vendor.activeItems}/{vendor.totalItems}</TableCell>
+                          <TableCell>{vendor.totalOrders || 0}</TableCell>
+                          <TableCell>{vendor.completedOrders || 0}</TableCell>
+                          <TableCell>₹{(vendor.totalRevenue || 0).toFixed(2)}</TableCell>
+                          <TableCell>{vendor.activeItems || 0}/{vendor.totalItems || 0}</TableCell>
                         </TableRow>
                       ))
                     ) : (
