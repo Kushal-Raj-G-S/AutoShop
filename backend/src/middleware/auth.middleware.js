@@ -1,5 +1,8 @@
 import { verifyToken as verifyJWT } from '../utils/jwt.js';
 import { sendResponse } from '../utils/response.js';
+import { db } from '../db/index.js';
+import { users } from '../db/schema.js';
+import { eq } from 'drizzle-orm';
 
 // Verify JWT token middleware
 export const verifyToken = async (req, res, next) => {
@@ -16,6 +19,17 @@ export const verifyToken = async (req, res, next) => {
 
     if (!decoded) {
       return sendResponse(res, 401, false, 'Invalid or expired token');
+    }
+
+    // Check if user is blocked
+    const [user] = await db
+      .select({ isBlocked: users.isBlocked })
+      .from(users)
+      .where(eq(users.id, decoded.id))
+      .limit(1);
+
+    if (user && user.isBlocked) {
+      return sendResponse(res, 403, false, 'Account has been blocked. Please contact support.');
     }
 
     // Attach user info to request

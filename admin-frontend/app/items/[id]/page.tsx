@@ -7,6 +7,8 @@ import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getItemById, updateItem } from "@/lib/api/items";
 import { getAdminCategories } from "@/lib/api/categories";
+import { listSubCategories } from "@/lib/api/subcategories";
+import { listUnits } from "@/lib/api/units";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,12 +24,12 @@ const itemSchema = z.object({
   sku: z.string().min(1, "SKU is required"),
   brand: z.string().min(1, "Brand is required"),
   categoryId: z.number().min(1, "Category is required"),
-  subCategory: z.string().min(1, "Sub-category is required"),
+  subCategoryId: z.number().min(1, "Sub-category is required").optional().nullable(),
   description: z.string().nullable().optional(),
   price: z.number().min(0, "Price must be positive"),
   tax: z.number().min(0, "Tax must be non-negative").max(100, "Tax cannot exceed 100%"),
   serviceTime: z.number().min(0, "Service time must be non-negative"),
-  unitType: z.enum(["pcs", "box", "carton"], { required_error: "Unit type is required" }),
+  unitId: z.number().min(1, "Unit is required"),
   imageUrl: z.string().nullable().optional(),
   stock: z.number().min(0, "Stock must be non-negative").nullable().optional(),
   isActive: z.boolean(),
@@ -63,14 +65,53 @@ export default function EditItemPage({
     handleSubmit,
     formState: { errors },
     reset,
+    watch,
+    setValue,
   } = useForm<ItemFormData>({
     resolver: zodResolver(itemSchema),
   });
 
+  const selectedCategoryId = watch("categoryId");
+  const selectedSubCategoryId = watch("subCategoryId");
+  const selectedUnitId = watch("unitId");
+
+  // Fetch sub-categories filtered by selected category
+  const { data: subCategoriesData } = useQuery({
+    queryKey: ["subcategories", selectedCategoryId],
+    queryFn: () => listSubCategories({ categoryId: selectedCategoryId, isActive: true }),
+    enabled: !!selectedCategoryId,
+  });
+
+  // Fetch all active units
+  const { data: unitsData } = useQuery({
+    queryKey: ["units-active"],
+    queryFn: () => listUnits({ isActive: true }),
+  });
+
+  const subCategories = subCategoriesData?.subCategories || [];
+  const units = unitsData?.units || [];
+
   // Reset form and preview when item data is loaded
   useEffect(() => {
     if (item && !isLoading) {
-      reset(item);
+      console.log('🔄 Resetting form with item data:', item);
+      console.log('   - categoryId:', item.categoryId, typeof item.categoryId);
+      console.log('   - subCategoryId:', item.subCategoryId, typeof item.subCategoryId);
+      console.log('   - unitId:', item.unitId, typeof item.unitId);
+      console.log('   - stock:', item.stock, typeof item.stock);
+      
+      // Reset form with properly typed values
+      reset({
+        ...item,
+        categoryId: item.categoryId || undefined,
+        subCategoryId: item.subCategoryId || null,
+        unitId: item.unitId || undefined,
+        stock: item.stock !== null ? item.stock : null,
+        price: item.price || 0,
+        tax: item.tax || 0,
+        serviceTime: item.serviceTime || 0,
+      });
+      
       if (item.imageUrl) {
         setImagePreview(item.imageUrl);
       }
@@ -269,7 +310,13 @@ export default function EditItemPage({
                 <Label htmlFor="categoryId">Category *</Label>
                 <select
                   id="categoryId"
-                  {...register("categoryId", { valueAsNumber: true })}
+                  value={selectedCategoryId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setValue("categoryId", value ? Number(value) : undefined, { shouldValidate: true });
+                    // Reset subcategory when category changes
+                    setValue("subCategoryId", null);
+                  }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="">Select a category</option>
@@ -285,33 +332,54 @@ export default function EditItemPage({
               </div>
             </div>
 
-            {/* Row 3: Sub-category and Unit Type */}
+            {/* Row 3: Sub-category and Unit */}
             <div className="grid grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="subCategory">Sub-category *</Label>
-                <Input
-                  id="subCategory"
-                  placeholder="e.g., Brake Systems"
-                  {...register("subCategory")}
-                />
-                {errors.subCategory && (
-                  <p className="text-sm text-red-500">{errors.subCategory.message}</p>
+                <Label htmlFor="subCategoryId">Sub-category</Label>
+                <select
+                  id="subCategoryId"
+                  value={selectedSubCategoryId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setValue("subCategoryId", value ? Number(value) : null, { shouldValidate: true });
+                  }}
+                  disabled={!selectedCategoryId}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="">
+                    {selectedCategoryId ? "Select sub-category" : "Select category first"}
+                  </option>
+                  {subCategories.map((subCat: any) => (
+                    <option key={subCat.id} value={subCat.id}>
+                      {subCat.name}
+                    </option>
+                  ))}
+                </select>
+                {errors.subCategoryId && (
+                  <p className="text-sm text-red-500">{errors.subCategoryId.message}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="unitType">Unit Type *</Label>
+                <Label htmlFor="unitId">Unit *</Label>
                 <select
-                  id="unitType"
-                  {...register("unitType")}
+                  id="unitId"
+                  value={selectedUnitId || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setValue("unitId", value ? Number(value) : undefined, { shouldValidate: true });
+                  }}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <option value="pcs">Pieces (pcs)</option>
-                  <option value="box">Box</option>
-                  <option value="carton">Carton</option>
+                  <option value="">Select unit</option>
+                  {units.map((unit: any) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.name} ({unit.abbreviation})
+                    </option>
+                  ))}
                 </select>
-                {errors.unitType && (
-                  <p className="text-sm text-red-500">{errors.unitType.message}</p>
+                {errors.unitId && (
+                  <p className="text-sm text-red-500">{errors.unitId.message}</p>
                 )}
               </div>
             </div>
@@ -325,7 +393,13 @@ export default function EditItemPage({
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  {...register("price", { valueAsNumber: true })}
+                  {...register("price", { 
+                    setValueAs: (v) => {
+                      if (v === "" || v === null) return undefined;
+                      const num = Number(v);
+                      return isNaN(num) ? undefined : num;
+                    }
+                  })}
                 />
                 {errors.price && (
                   <p className="text-sm text-red-500">{errors.price.message}</p>
@@ -339,7 +413,13 @@ export default function EditItemPage({
                   type="number"
                   step="0.01"
                   placeholder="18"
-                  {...register("tax", { valueAsNumber: true })}
+                  {...register("tax", { 
+                    setValueAs: (v) => {
+                      if (v === "" || v === null) return undefined;
+                      const num = Number(v);
+                      return isNaN(num) ? undefined : num;
+                    }
+                  })}
                 />
                 {errors.tax && (
                   <p className="text-sm text-red-500">{errors.tax.message}</p>
@@ -352,7 +432,13 @@ export default function EditItemPage({
                   id="stock"
                   type="number"
                   placeholder="0"
-                  {...register("stock", { valueAsNumber: true })}
+                  {...register("stock", { 
+                    setValueAs: (v) => {
+                      if (v === "" || v === null) return null;
+                      const num = Number(v);
+                      return isNaN(num) ? null : num;
+                    }
+                  })}
                 />
                 {errors.stock && (
                   <p className="text-sm text-red-500">{errors.stock.message}</p>
@@ -365,7 +451,13 @@ export default function EditItemPage({
                   id="serviceTime"
                   type="number"
                   placeholder="30"
-                  {...register("serviceTime", { valueAsNumber: true })}
+                  {...register("serviceTime", { 
+                    setValueAs: (v) => {
+                      if (v === "" || v === null) return undefined;
+                      const num = Number(v);
+                      return isNaN(num) ? undefined : num;
+                    }
+                  })}
                 />
                 {errors.serviceTime && (
                   <p className="text-sm text-red-500">{errors.serviceTime.message}</p>

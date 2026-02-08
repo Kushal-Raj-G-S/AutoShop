@@ -7,11 +7,15 @@ import Link from "next/link";
 import { 
   LayoutDashboard, 
   Store, 
-  FolderTree, 
+  FolderTree,
+  Ruler, 
   Package, 
   ShoppingCart,
+  Users,
   Settings,
-  LogOut 
+  LogOut,
+  FileText,
+  Activity
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -30,12 +34,71 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, isAdmin, isLoading, router]);
 
+  const navItems = [
+    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/vendors", icon: Store, label: "Vendors" },
+    { href: "/categories", icon: FolderTree, label: "Categories" },
+    { href: "/units", icon: Ruler, label: "Units" },
+    { href: "/items", icon: Package, label: "Items" },
+    { href: "/orders", icon: ShoppingCart, label: "Orders" },
+    { href: "/users", icon: Users, label: "Users" },
+    { href: "/activity-logs", icon: Activity, label: "Activity Logs" },
+    { href: "/reports", icon: FileText, label: "Reports" },
+    { href: "/settings", icon: Settings, label: "Settings" },
+  ];
+
+  // Show loading screen with sidebar
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <div className="text-lg text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-100 flex">
+        {/* Sidebar - Fully visible during loading */}
+        <div className="w-64 bg-white shadow-lg flex flex-col">
+          <div className="flex flex-col h-screen">
+            {/* Logo */}
+            <div className="p-6 border-b flex-shrink-0">
+              <h1 className="text-2xl font-bold text-gray-800">Admin Panel</h1>
+              <div className="mt-2 text-sm text-gray-600">
+                <div className="h-4 bg-gray-200 rounded w-24 mb-1"></div>
+                <div className="h-3 bg-gray-200 rounded w-32"></div>
+              </div>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                      isActive
+                        ? "bg-primary text-white"
+                        : "text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Logout */}
+            <div className="p-4 border-t flex-shrink-0">
+              <div className="h-10 bg-gray-200 rounded"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Loading spinner - Content area only */}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600 font-medium">Loading...</p>
+          </div>
         </div>
       </div>
     );
@@ -45,22 +108,13 @@ export default function DashboardLayout({
     return null;
   }
 
-  const navItems = [
-    { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/vendors", icon: Store, label: "Vendors" },
-    { href: "/categories", icon: FolderTree, label: "Categories" },
-    { href: "/items", icon: Package, label: "Items" },
-    { href: "/orders", icon: ShoppingCart, label: "Orders" },
-    { href: "/settings", icon: Settings, label: "Settings" },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
+      <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg flex flex-col">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b">
+          <div className="p-6 border-b flex-shrink-0">
             <h1 className="text-2xl font-bold text-gray-800">Admin Panel</h1>
             {user && (
               <div className="mt-2 text-sm text-gray-600">
@@ -70,8 +124,8 @@ export default function DashboardLayout({
             )}
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          {/* Navigation - Scrollable */}
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -93,8 +147,8 @@ export default function DashboardLayout({
             })}
           </nav>
 
-          {/* Logout Button */}
-          <div className="p-4 border-t">
+          {/* Logout Button - Always visible at bottom */}
+          <div className="p-4 border-t flex-shrink-0">
             <Button
               onClick={logout}
               variant="outline"

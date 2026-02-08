@@ -19,15 +19,17 @@ class ItemService {
 
     const { 
       categoryId, 
+      subCategoryId,  // New FK field
       name, 
       sku,
       brand,
-      subCategory,
+      subCategory,  // Legacy field
       description, 
       price, 
       tax,
       serviceTime,
-      unitType,
+      unitType,  // Legacy field
+      unitId,  // New FK field
       imageUrl, 
       stock, 
       metadata 
@@ -98,16 +100,18 @@ class ItemService {
     const result = await db.transaction(async (tx) => {
       const [newItem] = await tx.insert(items).values({
         categoryId,
+        subCategoryId: subCategoryId !== undefined ? subCategoryId : null,
         name,
         sku: sku || null,
         brand: brand || null,
-        subCategory: subCategory || null,
+        subCategory: subCategory || null,  // Legacy field
         slug: uniqueSlug,
         description: description || null,
         price: price.toString(),
         tax: tax !== undefined ? tax.toString() : '0',
         serviceTime: serviceTime || 0,
-        unitType: unitType || 'pcs',
+        unitType: unitType || 'pcs',  // Legacy field
+        unitId: unitId !== undefined ? unitId : null,
         imageUrl: finalImageUrl,
         stock: stock !== undefined ? stock : 0,
         metadata: metadata || null,
@@ -179,6 +183,14 @@ class ItemService {
 
     if (payload.subCategory !== undefined) {
       updateData.subCategory = payload.subCategory;
+    }
+
+    if (payload.subCategoryId !== undefined) {
+      updateData.subCategoryId = payload.subCategoryId;
+    }
+
+    if (payload.unitId !== undefined) {
+      updateData.unitId = payload.unitId;
     }
 
     if (payload.price !== undefined) {
@@ -254,8 +266,9 @@ class ItemService {
     }
 
     if (payload.stock !== undefined) {
-      if (isNaN(parseInt(payload.stock)) || parseInt(payload.stock) < 0) {
-        throw new Error('VALIDATION: Stock must be a non-negative integer');
+      // Allow null or non-negative integers
+      if (payload.stock !== null && (isNaN(parseInt(payload.stock)) || parseInt(payload.stock) < 0)) {
+        throw new Error('VALIDATION: Stock must be a non-negative integer or null');
       }
       updateData.stock = payload.stock;
     }
@@ -384,16 +397,18 @@ class ItemService {
       .select({
         id: items.id,
         categoryId: items.categoryId,
+        subCategoryId: items.subCategoryId,  // New FK field
         name: items.name,
         sku: items.sku,
         brand: items.brand,
-        subCategory: items.subCategory,
+        subCategory: items.subCategory,  // Legacy field
         slug: items.slug,
         description: items.description,
         price: items.price,
         tax: items.tax,
         serviceTime: items.serviceTime,
-        unitType: items.unitType,
+        unitType: items.unitType,  // Legacy field
+        unitId: items.unitId,  // New FK field
         imageUrl: items.imageUrl,
         isActive: items.isActive,
         stock: items.stock,
@@ -557,16 +572,18 @@ class ItemService {
       .select({
         id: items.id,
         categoryId: items.categoryId,
+        subCategoryId: items.subCategoryId,  // New FK field
         name: items.name,
         sku: items.sku,
         brand: items.brand,
-        subCategory: items.subCategory,
+        subCategory: items.subCategory,  // Legacy field
         slug: items.slug,
         description: items.description,
         price: items.price,
         tax: items.tax,
         serviceTime: items.serviceTime,
-        unitType: items.unitType,
+        unitType: items.unitType,  // Legacy field
+        unitId: items.unitId,  // New FK field
         imageUrl: items.imageUrl,
         isActive: items.isActive,
         stock: items.stock,

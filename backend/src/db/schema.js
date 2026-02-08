@@ -14,6 +14,9 @@ export const users = pgTable('users', {
   email: varchar('email', { length: 255 }),
   role: userRoleEnum('role').notNull().default('customer'),
   isActive: varchar('is_active', { length: 10 }).notNull().default('true'),
+  isBlocked: boolean('is_blocked').notNull().default(false),
+  blockedAt: timestamp('blocked_at'),
+  blockedBy: uuid('blocked_by').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -136,6 +139,32 @@ export const systemConfig = pgTable('system_config', {
   updatedBy: uuid('updated_by').references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// Activity Action Enum
+export const activityActionEnum = pgEnum('activity_action', [
+  'create', 'update', 'delete', 'approve', 'reject', 'block', 'unblock',
+  'login', 'logout', 'export', 'upload', 'download', 'view', 'assign'
+]);
+
+// Activity Entity Enum
+export const activityEntityEnum = pgEnum('activity_entity', [
+  'user', 'vendor', 'category', 'subcategory', 'unit', 'item', 
+  'order', 'payment', 'report', 'settings'
+]);
+
+// Activity Logs table
+export const activityLogs = pgTable('activity_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  action: activityActionEnum('action').notNull(),
+  entity: activityEntityEnum('entity').notNull(),
+  entityId: varchar('entity_id', { length: 50 }), // Can be UUID or integer as string
+  description: text('description').notNull(),
+  metadata: jsonb('metadata').$type(), // Additional context data
+  ipAddress: varchar('ip_address', { length: 45 }), // IPv4 or IPv6
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // Import and re-export orders module schemas

@@ -3,9 +3,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAdminCategories, deleteCategory } from "@/lib/api/categories";
+import { listSubCategories } from "@/lib/api/subcategories";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,8 +18,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { SubCategoriesDialog } from "@/components/categories/SubCategoriesDialog";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Image as ImageIcon, ListTree } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function CategoriesPage() {
@@ -25,11 +28,26 @@ export default function CategoriesPage() {
   const { toast } = useToast();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [subCategoriesDialogOpen, setSubCategoriesDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<{ id: number; name: string } | null>(null);
 
   const { data: categories, isLoading, isError, error } = useQuery({
     queryKey: ["admin-categories"],
     queryFn: getAdminCategories,
   });
+
+  // Fetch sub-categories counts for all categories
+  const { data: allSubCategoriesData } = useQuery({
+    queryKey: ["all-subcategories"],
+    queryFn: () => listSubCategories({}),
+    enabled: !!categories && categories.length > 0,
+  });
+
+  // Calculate sub-category counts per category
+  const subCategoryCounts = (allSubCategoriesData?.subCategories || []).reduce((acc: Record<number, number>, subCat: any) => {
+    acc[subCat.categoryId] = (acc[subCat.categoryId] || 0) + 1;
+    return acc;
+  }, {});
 
   const deleteMutation = useMutation({
     mutationFn: deleteCategory,
@@ -61,6 +79,11 @@ export default function CategoriesPage() {
     if (categoryToDelete) {
       deleteMutation.mutate(categoryToDelete.id);
     }
+  };
+
+  const handleManageSubCategories = (id: number, name: string) => {
+    setSelectedCategory({ id, name });
+    setSubCategoriesDialogOpen(true);
   };
 
   const formatDate = (dateString: string) => {
@@ -156,6 +179,7 @@ export default function CategoriesPage() {
                       <TableHead>Name</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Image</TableHead>
+                      <TableHead>Sub-Categories</TableHead>
                       <TableHead>Created At</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -182,6 +206,19 @@ export default function CategoriesPage() {
                           ) : (
                             <span className="text-gray-400 text-sm">No image</span>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleManageSubCategories(category.id, category.name)}
+                            className="flex items-center gap-1"
+                          >
+                            <ListTree className="w-4 h-4" />
+                            <Badge variant="secondary">
+                              {subCategoryCounts[category.id] || 0}
+                            </Badge>
+                          </Button>
                         </TableCell>
                         <TableCell>{formatDate(category.createdAt)}</TableCell>
                         <TableCell className="text-right">
@@ -234,6 +271,15 @@ export default function CategoriesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {selectedCategory && (
+        <SubCategoriesDialog
+          open={subCategoriesDialogOpen}
+          onOpenChange={setSubCategoriesDialogOpen}
+          categoryId={selectedCategory.id}
+          categoryName={selectedCategory.name}
+        />
+      )}
     </>
   );
 }

@@ -14,12 +14,14 @@ class ItemController {
         name, 
         sku,
         brand,
-        subCategory,
+        subCategory,  // Legacy field
+        subCategoryId,  // New FK field
         description, 
         price, 
         tax,
         serviceTime,
-        unitType,
+        unitType,  // Legacy field
+        unitId,  // New FK field
         imageUrl, 
         stock, 
         metadata 
@@ -30,6 +32,14 @@ class ItemController {
 
       if (!categoryId || isNaN(parseInt(categoryId))) {
         errors.push('categoryId must be a valid integer');
+      }
+
+      if (subCategoryId !== undefined && subCategoryId !== null && isNaN(parseInt(subCategoryId))) {
+        errors.push('subCategoryId must be a valid integer or null');
+      }
+
+      if (unitId !== undefined && unitId !== null && isNaN(parseInt(unitId))) {
+        errors.push('unitId must be a valid integer');
       }
 
       if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -60,8 +70,8 @@ class ItemController {
         errors.push('imageUrl must be a string');
       }
 
-      if (stock !== undefined && (isNaN(parseInt(stock)) || parseInt(stock) < 0)) {
-        errors.push('stock must be a non-negative integer');
+      if (stock !== undefined && stock !== null && (isNaN(parseInt(stock)) || parseInt(stock) < 0)) {
+        errors.push('stock must be a non-negative integer or null');
       }
 
       if (metadata !== undefined && typeof metadata !== 'object') {
@@ -79,13 +89,15 @@ class ItemController {
           sku: sku?.trim(),
           brand: brand?.trim(),
           subCategory: subCategory?.trim(),
+          subCategoryId: subCategoryId !== undefined ? (subCategoryId === null ? null : parseInt(subCategoryId)) : undefined,
           description: description?.trim(),
           price: parseFloat(price),
           tax: tax !== undefined ? parseFloat(tax) : 0,
           serviceTime: serviceTime !== undefined ? parseInt(serviceTime) : 0,
           unitType: unitType || 'pcs',
+          unitId: unitId !== undefined ? (unitId === null ? null : parseInt(unitId)) : undefined,
           imageUrl,
-          stock: stock !== undefined ? parseInt(stock) : 0,
+          stock: stock !== undefined ? (stock === null ? null : parseInt(stock)) : 0,
           metadata,
         },
         actor
@@ -141,12 +153,14 @@ class ItemController {
         name, 
         sku,
         brand,
-        subCategory,
+        subCategory,  // Legacy field
+        subCategoryId,  // New FK field
         description, 
         price, 
         tax,
         serviceTime,
-        unitType,
+        unitType,  // Legacy field
+        unitId,  // New FK field
         imageUrl, 
         stock, 
         isActive, 
@@ -162,6 +176,14 @@ class ItemController {
 
       if (categoryId !== undefined && isNaN(parseInt(categoryId))) {
         errors.push('categoryId must be a valid integer');
+      }
+
+      if (subCategoryId !== undefined && subCategoryId !== null && isNaN(parseInt(subCategoryId))) {
+        errors.push('subCategoryId must be a valid integer or null');
+      }
+
+      if (unitId !== undefined && unitId !== null && isNaN(parseInt(unitId))) {
+        errors.push('unitId must be a valid integer');
       }
 
       if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0)) {
@@ -188,8 +210,8 @@ class ItemController {
         errors.push('imageUrl must be a string');
       }
 
-      if (stock !== undefined && (isNaN(parseInt(stock)) || parseInt(stock) < 0)) {
-        errors.push('stock must be a non-negative integer');
+      if (stock !== undefined && stock !== null && (isNaN(parseInt(stock)) || parseInt(stock) < 0)) {
+        errors.push('stock must be a non-negative integer or null');
       }
 
       if (isActive !== undefined && typeof isActive !== 'boolean') {
@@ -210,13 +232,15 @@ class ItemController {
       if (sku !== undefined) payload.sku = sku?.trim();
       if (brand !== undefined) payload.brand = brand?.trim();
       if (subCategory !== undefined) payload.subCategory = subCategory?.trim();
+      if (subCategoryId !== undefined) payload.subCategoryId = subCategoryId === null ? null : parseInt(subCategoryId);
       if (description !== undefined) payload.description = description?.trim();
       if (price !== undefined) payload.price = parseFloat(price);
       if (tax !== undefined) payload.tax = parseFloat(tax);
       if (serviceTime !== undefined) payload.serviceTime = parseInt(serviceTime);
       if (unitType !== undefined) payload.unitType = unitType;
+      if (unitId !== undefined) payload.unitId = unitId === null ? null : parseInt(unitId);
       if (imageUrl !== undefined) payload.imageUrl = imageUrl;
-      if (stock !== undefined) payload.stock = parseInt(stock);
+      if (stock !== undefined) payload.stock = stock === null ? null : parseInt(stock);
       if (isActive !== undefined) payload.isActive = isActive;
       if (metadata !== undefined) payload.metadata = metadata;
 

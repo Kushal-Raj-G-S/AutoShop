@@ -7,6 +7,7 @@ import vendorRoutes from './modules/vendor/vendor.routes.js';
 import categoryRoutes from './modules/category/category.routes.js';
 import subcategoryRoutes from './modules/subcategory/subcategory.routes.js';
 import unitRoutes from './modules/unit/unit.routes.js';
+import userRoutes from './modules/user/user.routes.js';
 import itemRoutes from './modules/items/item.routes.js';
 import orderRoutes from './modules/orders/order.routes.js';
 import assignmentRoutes from './modules/orders/assignment/assignment.routes.js';
@@ -15,6 +16,8 @@ import adminStatsRoutes from './modules/admin/admin.stats.routes.js';
 import adminOrdersRoutes from './modules/admin/admin.orders.routes.js';
 import adminVendorsRoutes from './modules/admin/admin.vendors.routes.js';
 import adminConfigRoutes from './modules/admin/admin.config.routes.js';
+import activityLogRoutes from './modules/activity/activity.routes.js';
+import reportsRoutes from './modules/reports/reports.routes.js';
 import { handleRazorpayWebhook, captureRawBody } from './modules/orders/razorpay.webhook.js';
 import { initializeSocket } from './socket.js';
 
@@ -73,6 +76,7 @@ app.use('/api/vendor', vendorRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', subcategoryRoutes);
 app.use('/api', unitRoutes);
+app.use('/api', userRoutes);
 app.use('/api', itemRoutes);
 app.use('/api', orderRoutes);
 app.use('/api', assignmentRoutes);
@@ -83,6 +87,8 @@ app.use('/api/admin', adminStatsRoutes);
 app.use('/api/admin', adminOrdersRoutes);
 app.use('/api/admin', adminVendorsRoutes);
 app.use('/api/admin', adminConfigRoutes);
+app.use('/api/admin/activity-logs', activityLogRoutes);
+app.use('/api/admin/reports', reportsRoutes);
 
 // Razorpay webhook (must use raw body for signature verification)
 app.post('/api/webhooks/razorpay',
@@ -184,6 +190,47 @@ process.on('unhandledRejection', (reason, promise) => {
 
 process.on('uncaughtException', (error) => {
   console.error('❌ Uncaught Exception:', error);
+  process.exit(1);
 });
+
+// Graceful shutdown
+async function gracefulShutdown(signal) {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  try {
+    // Close HTTP server
+    if (httpServer) {
+      await new Promise((resolve) => {
+        httpServer.close(() => {
+          console.log('✅ HTTP server closed');
+          resolve();
+        });
+      });
+    }
+    
+    // Close Redis connection
+    const redis = app.get('redis');
+    if (redis) {
+      await redis.quit();
+      console.log('✅ Redis connection closed');
+    }
+    
+    // Close database pool
+    const { pool } = await import('./db/index.js');
+    if (pool) {
+      await pool.end();
+      console.log('✅ Database pool closed');
+    }
+    
+    console.log('✅ Graceful shutdown complete');
+    process.exit(0);
+  } catch (error) {
+    console.error('❌ Error during shutdown:', error);
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 export default app;
