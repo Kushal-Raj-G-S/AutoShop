@@ -33,6 +33,10 @@ import {
   LogIn,
   LogOut,
   Link2,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 
 // Action icons mapping
@@ -73,6 +77,7 @@ const actionColors: Record<string, string> = {
 
 export default function ActivityLogsPage() {
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [filters, setFilters] = useState({
     action: '',
     entity: '',
@@ -82,11 +87,11 @@ export default function ActivityLogsPage() {
 
   // Fetch activity logs
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['activity-logs', page, filters],
+    queryKey: ['activity-logs', page, limit, filters],
     queryFn: () =>
       activityLogsApi.list({
         page,
-        limit: 50,
+        limit,
         ...filters,
       }),
   });
@@ -103,6 +108,11 @@ export default function ActivityLogsPage() {
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
+    setPage(1);
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
     setPage(1);
   };
 
@@ -322,28 +332,138 @@ export default function ActivityLogsPage() {
             </Table>
           </div>
 
-          {/* Pagination */}
-          {data?.pagination && data.pagination.totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Page {data.pagination.page} of {data.pagination.totalPages}
+          {/* Enhanced Pagination */}
+          {data?.pagination && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t">
+              <div className="flex items-center gap-6">
+                <div className="text-sm text-muted-foreground">
+                  Showing{' '}
+                  <span className="font-medium">
+                    {data.pagination.total === 0
+                      ? '0'
+                      : `${(data.pagination.page - 1) * data.pagination.limit + 1}-${Math.min(
+                          data.pagination.page * data.pagination.limit,
+                          data.pagination.total
+                        )}`}
+                  </span>{' '}
+                  of <span className="font-medium">{data.pagination.total}</span> results
+                </div>
+                
+                {/* Page Size Selector */}
+                <div className="flex items-center gap-2 text-sm">
+                  <Label htmlFor="page-size" className="text-muted-foreground">Show:</Label>
+                  <Select value={limit.toString()} onValueChange={(value) => handleLimitChange(Number(value))}>
+                    <SelectTrigger className="h-8 w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= data.pagination.totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+              
+              {data.pagination.totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  {/* First Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Previous Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1">
+                    {(() => {
+                      const totalPages = data.pagination.totalPages;
+                      const currentPage = page;
+                      const pages = [];
+
+                      if (totalPages <= 7) {
+                        // Show all pages if 7 or fewer
+                        for (let i = 1; i <= totalPages; i++) {
+                          pages.push(i);
+                        }
+                      } else {
+                        // Show smart pagination
+                        if (currentPage <= 4) {
+                          // Near beginning
+                          pages.push(1, 2, 3, 4, 5, -1, totalPages);
+                        } else if (currentPage >= totalPages - 3) {
+                          // Near end
+                          pages.push(1, -1, totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+                        } else {
+                          // In middle
+                          pages.push(1, -1, currentPage - 1, currentPage, currentPage + 1, -1, totalPages);
+                        }
+                      }
+
+                      return pages.map((pageNum, index) => {
+                        if (pageNum === -1) {
+                          return (
+                            <span key={`ellipsis-${index}`} className="px-1 text-muted-foreground">
+                              ...
+                            </span>
+                          );
+                        }
+
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={pageNum === currentPage ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => setPage(pageNum)}
+                            className="h-8 w-8 p-0"
+                            disabled={pageNum === currentPage}
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      });
+                    })()}
+                  </div>
+
+                  {/* Next Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => p + 1)}
+                    disabled={page >= data.pagination.totalPages}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+
+                  {/* Last Page */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage(data.pagination.totalPages)}
+                    disabled={page >= data.pagination.totalPages}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
