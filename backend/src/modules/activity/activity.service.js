@@ -1,5 +1,5 @@
 import { db } from '../../db/index.js';
-import { activityLogs } from '../../db/schema.js';
+import { activityLogs, users } from '../../db/schema.js';
 import { eq, and, desc, sql, gte, lte } from 'drizzle-orm';
 
 class ActivityLogService {
@@ -85,9 +85,9 @@ class ActivityLogService {
         .select({
           id: activityLogs.id,
           userId: activityLogs.userId,
-          userName: sql`users.name`,
-          userPhone: sql`users.phone_number`,
-          userRole: sql`users.role`,
+          userName: users.name,
+          userPhone: users.phoneNumber,
+          userRole: users.role,
           action: activityLogs.action,
           entity: activityLogs.entity,
           entityId: activityLogs.entityId,
@@ -98,7 +98,7 @@ class ActivityLogService {
           createdAt: activityLogs.createdAt,
         })
         .from(activityLogs)
-        .leftJoin(sql`users`, sql`activity_logs.user_id = users.id`)
+        .leftJoin(users, eq(activityLogs.userId, users.id))
         .orderBy(desc(activityLogs.createdAt))
         .limit(limit)
         .offset(offset);

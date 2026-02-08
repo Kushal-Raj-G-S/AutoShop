@@ -192,13 +192,13 @@ class ReportsService {
           name: items.name,
           description: items.description,
           categoryId: items.categoryId,
-          categoryName: categories.name,
+          categoryName: sql`categories.name`.as('categoryName'),
           subCategoryId: items.subCategoryId,
-          subCategoryName: subCategories.name,
+          subCategoryName: sql`sub_categories.name`.as('subCategoryName'),
           unitId: items.unitId,
-          unitName: units.name,
+          unitName: sql`units.name`.as('unitName'),
           vendorId: items.vendorId,
-          vendorName: vendors.storeName,
+          vendorName: sql`vendors.store_name`.as('vendorName'),
           price: items.price,
           stock: items.stock,
           isActive: items.isActive,
@@ -206,10 +206,10 @@ class ReportsService {
           updatedAt: items.updatedAt,
         })
         .from(items)
-        .leftJoin(categories, eq(items.categoryId, categories.id))
-        .leftJoin(subCategories, eq(items.subCategoryId, subCategories.id))
-        .leftJoin(units, eq(items.unitId, units.id))
-        .leftJoin(vendors, eq(items.vendorId, vendors.id))
+        .leftJoin(categories, sql`items.category_id = categories.id`)
+        .leftJoin(subCategories, sql`items.sub_category_id = sub_categories.id`)
+        .leftJoin(units, sql`items.unit_id = units.id`)
+        .leftJoin(vendors, sql`items.vendor_id = vendors.id`)
         .orderBy(items.name);
 
       // Calculate statistics
@@ -292,7 +292,7 @@ class ReportsService {
       // For each vendor, get statistics
       const vendorReports = await Promise.all(
         vendorsData.map(async (vendor) => {
-          const orderConditions = [eq(orders.vendorId, vendor.id)];
+          const orderConditions = [eq(orders.assignedVendorId, vendor.id)];
 
           if (startDate) {
             orderConditions.push(gte(orders.createdAt, new Date(startDate)));
