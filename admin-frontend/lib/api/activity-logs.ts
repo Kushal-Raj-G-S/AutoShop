@@ -11,7 +11,10 @@ export const activityLogsApi = {
     limit?: number;
   }) => {
     const response = await axiosInstance.get('/admin/activity-logs', { params });
-    return response.data;
+    return {
+      logs: response.data.data,
+      pagination: response.data.pagination,
+    };
   },
 
   getStats: async (params?: { startDate?: string; endDate?: string }) => {
