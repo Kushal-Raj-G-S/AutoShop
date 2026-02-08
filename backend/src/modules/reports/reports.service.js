@@ -1,5 +1,5 @@
 import { db } from '../../db/index.js';
-import { orders, items, vendors, users, orderItems } from '../../db/schema.js';
+import { orders, items, vendors, users, orderItems, categories, subCategories, units } from '../../db/schema.js';
 import { eq, and, desc, sql, gte, lte, inArray } from 'drizzle-orm';
 
 class ReportsService {
@@ -25,80 +25,55 @@ class ReportsService {
       }
 
       if (vendorId) {
-        conditions.push(eq(orders.vendorId, vendorId));
+        conditions.push(eq(orders.assignedVendorId, vendorId));
       }
 
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
       // Get orders with user and vendor info
-      const ordersData = await (whereClause
-        ? db
-            .select({
-              id: orders.id,
-              orderNumber: orders.orderNumber,
-              userId: orders.userId,
-              userName: sql`users.name`,
-              userPhone: sql`users.phone_number`,
-              vendorId: orders.vendorId,
-              vendorName: sql`vendors.business_name`,
-              status: orders.status,
-              totalAmount: orders.totalAmount,
-              deliveryFee: orders.deliveryFee,
-              gstAmount: orders.gstAmount,
-              platformFee: orders.platformFee,
-              finalAmount: orders.finalAmount,
-              paymentMethod: orders.paymentMethod,
-              paymentStatus: orders.paymentStatus,
-              createdAt: orders.createdAt,
-              deliveredAt: orders.deliveredAt,
-            })
-            .from(orders)
-            .leftJoin(sql`users`, sql`orders.user_id = users.id`)
-            .leftJoin(sql`vendors`, sql`orders.vendor_id = vendors.id`)
-            .where(whereClause)
-            .orderBy(desc(orders.createdAt))
-        : db
-            .select({
-              id: orders.id,
-              orderNumber: orders.orderNumber,
-              userId: orders.userId,
-              userName: sql`users.name`,
-              userPhone: sql`users.phone_number`,
-              vendorId: orders.vendorId,
-              vendorName: sql`vendors.business_name`,
-              status: orders.status,
-              totalAmount: orders.totalAmount,
-              deliveryFee: orders.deliveryFee,
-              gstAmount: orders.gstAmount,
-              platformFee: orders.platformFee,
-              finalAmount: orders.finalAmount,
-              paymentMethod: orders.paymentMethod,
-              paymentStatus: orders.paymentStatus,
-              createdAt: orders.createdAt,
-              deliveredAt: orders.deliveredAt,
-            })
-            .from(orders)
-            .leftJoin(sql`users`, sql`orders.user_id = users.id`)
-            .leftJoin(sql`vendors`, sql`orders.vendor_id = vendors.id`)
-            .orderBy(desc(orders.createdAt)));
+      const ordersData = await db
+        .select({
+          id: orders.id,
+          orderId: orders.orderId,
+          userId: orders.userId,
+          userName: users.name,
+          userPhone: users.phoneNumber,
+          assignedVendorId: orders.assignedVendorId,
+          vendorName: vendors.storeName,
+          vendorPhone: vendors.phone,
+          status: orders.status,
+          subtotal: orders.subtotal,
+          tax: orders.tax,
+          deliveryFee: orders.deliveryFee,
+          total: orders.total,
+          paymentMethod: orders.paymentMethod,
+          deliveryAddress: orders.deliveryAddress,
+          createdAt: orders.createdAt,
+          completedAt: orders.completedAt,
+          cancelledAt: orders.cancelledAt,
+          assignedAt: orders.assignedAt,
+        })
+        .from(orders)
+        .leftJoin(users, eq(orders.userId, users.id))
+        .leftJoin(vendors, eq(orders.assignedVendorId, vendors.id))
+        .where(whereClause)
+        .orderBy(desc(orders.createdAt));
 
       // Calculate summary statistics
       const summary = {
         totalOrders: ordersData.length,
-        totalRevenue: ordersData.reduce((sum, order) => sum + parseFloat(order.finalAmount || 0), 0),
+        totalRevenue: ordersData.reduce((sum, order) => sum + parseFloat(order.total || 0), 0),
         totalDeliveryFees: ordersData.reduce((sum, order) => sum + parseFloat(order.deliveryFee || 0), 0),
-        totalGST: ordersData.reduce((sum, order) => sum + parseFloat(order.gstAmount || 0), 0),
-        totalPlatformFees: ordersData.reduce((sum, order) => sum + parseFloat(order.platformFee || 0), 0),
+        totalTax: ordersData.reduce((sum, order) => sum + parseFloat(order.tax || 0), 0),
+        totalSubtotal: ordersData.reduce((sum, order) => sum + parseFloat(order.subtotal || 0), 0),
         byStatus: {},
         byPaymentMethod: {},
-        byPaymentStatus: {},
       };
 
-      // Group by status
+      // Group by status and payment method
       ordersData.forEach((order) => {
         summary.byStatus[order.status] = (summary.byStatus[order.status] || 0) + 1;
         summary.byPaymentMethod[order.paymentMethod] = (summary.byPaymentMethod[order.paymentMethod] || 0) + 1;
-        summary.byPaymentStatus[order.paymentStatus] = (summary.byPaymentStatus[order.paymentStatus] || 0) + 1;
       });
 
       return {
@@ -120,52 +95,52 @@ class ReportsService {
   async generatePayoutsReport(filters = {}) {
     try {
       const { startDate, endDate, vendorId, status } = filters;
-      const conditions = [eq(orders.paymentStatus, 'paid')];
+      const conditions = [eq(orders.status, 'completed')];
 
       if (startDate) {
-        conditions.push(gte(orders.deliveredAt, new Date(startDate)));
+        conditions.push(gte(orders.completedAt, new Date(startDate)));
       }
 
       if (endDate) {
-        conditions.push(lte(orders.deliveredAt, new Date(endDate)));
+        conditions.push(lte(orders.completedAt, new Date(endDate)));
       }
 
       if (vendorId) {
-        conditions.push(eq(orders.vendorId, vendorId));
-      }
-
-      if (status) {
-        conditions.push(eq(orders.status, status));
+        conditions.push(eq(orders.assignedVendorId, vendorId));
       }
 
       const whereClause = and(...conditions);
 
-      // Get completed paid orders
+      // Get completed orders
       const payoutOrders = await db
         .select({
           id: orders.id,
-          orderNumber: orders.orderNumber,
-          vendorId: orders.vendorId,
-          vendorName: sql`vendors.business_name`,
-          vendorPhone: sql`vendors.phone_number`,
+          orderId: orders.orderId,
+          assignedVendorId: orders.assignedVendorId,
+          vendorName: vendors.storeName,
+          vendorPhone: vendors.phone,
           status: orders.status,
-          totalAmount: orders.totalAmount,
+          subtotal: orders.subtotal,
+          tax: orders.tax,
           deliveryFee: orders.deliveryFee,
-          gstAmount: orders.gstAmount,
-          platformFee: orders.platformFee,
-          finalAmount: orders.finalAmount,
-          deliveredAt: orders.deliveredAt,
+          total: orders.total,
+          completedAt: orders.completedAt,
           createdAt: orders.createdAt,
         })
         .from(orders)
-        .leftJoin(sql`vendors`, sql`orders.vendor_id = vendors.id`)
+        .leftJoin(vendors, eq(orders.assignedVendorId, vendors.id))
         .where(whereClause)
-        .orderBy(desc(orders.deliveredAt));
+        .orderBy(desc(orders.completedAt));
 
-      // Calculate payouts by vendor
+      // Calculate payouts by vendor (assuming 10% platform fee)
       const vendorPayouts = {};
       payoutOrders.forEach((order) => {
-        const vendorId = order.vendorId;
+        const vendorId = order.assignedVendorId;
+        if (!vendorId) return;
+        
+        const platformFee = parseFloat(order.total || 0) * 0.1;
+        const netPayout = parseFloat(order.total || 0) - platformFee;
+        
         if (!vendorPayouts[vendorId]) {
           vendorPayouts[vendorId] = {
             vendorId,
@@ -179,20 +154,16 @@ class ReportsService {
         }
 
         vendorPayouts[vendorId].totalOrders += 1;
-        vendorPayouts[vendorId].totalRevenue += parseFloat(order.totalAmount || 0);
-        vendorPayouts[vendorId].totalPlatformFees += parseFloat(order.platformFee || 0);
-        vendorPayouts[vendorId].netPayout += 
-          parseFloat(order.totalAmount || 0) - parseFloat(order.platformFee || 0);
+        vendorPayouts[vendorId].totalRevenue += parseFloat(order.total || 0);
+        vendorPayouts[vendorId].totalPlatformFees += platformFee;
+        vendorPayouts[vendorId].netPayout += netPayout;
       });
 
       const summary = {
         totalOrders: payoutOrders.length,
-        totalRevenue: payoutOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0),
-        totalPlatformFees: payoutOrders.reduce((sum, o) => sum + parseFloat(o.platformFee || 0), 0),
-        totalNetPayouts: payoutOrders.reduce(
-          (sum, o) => sum + (parseFloat(o.totalAmount || 0) - parseFloat(o.platformFee || 0)),
-          0
-        ),
+        totalRevenue: payoutOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0),
+        totalPlatformFees: payoutOrders.reduce((sum, o) => sum + (parseFloat(o.total || 0) * 0.1), 0),
+        totalNetPayouts: payoutOrders.reduce((sum, o) => sum + (parseFloat(o.total || 0) * 0.9), 0),
         uniqueVendors: Object.keys(vendorPayouts).length,
       };
 
@@ -221,13 +192,13 @@ class ReportsService {
           name: items.name,
           description: items.description,
           categoryId: items.categoryId,
-          categoryName: sql`categories.name`,
+          categoryName: categories.name,
           subCategoryId: items.subCategoryId,
-          subCategoryName: sql`sub_categories.name`,
+          subCategoryName: subCategories.name,
           unitId: items.unitId,
-          unitName: sql`units.name`,
+          unitName: units.name,
           vendorId: items.vendorId,
-          vendorName: sql`vendors.business_name`,
+          vendorName: vendors.storeName,
           price: items.price,
           stock: items.stock,
           isActive: items.isActive,
@@ -235,17 +206,17 @@ class ReportsService {
           updatedAt: items.updatedAt,
         })
         .from(items)
-        .leftJoin(sql`categories`, sql`items.category_id = categories.id`)
-        .leftJoin(sql`sub_categories`, sql`items.sub_category_id = sub_categories.id`)
-        .leftJoin(sql`units`, sql`items.unit_id = units.id`)
-        .leftJoin(sql`vendors`, sql`items.vendor_id = vendors.id`)
+        .leftJoin(categories, eq(items.categoryId, categories.id))
+        .leftJoin(subCategories, eq(items.subCategoryId, subCategories.id))
+        .leftJoin(units, eq(items.unitId, units.id))
+        .leftJoin(vendors, eq(items.vendorId, vendors.id))
         .orderBy(items.name);
 
       // Calculate statistics
       const summary = {
         totalItems: inventoryData.length,
-        activeItems: inventoryData.filter((item) => item.isActive).length,
-        inactiveItems: inventoryData.filter((item) => !item.isActive).length,
+        activeItems: inventoryData.filter((item) => item.isActive === 'true').length,
+        inactiveItems: inventoryData.filter((item) => item.isActive !== 'true').length,
         outOfStock: inventoryData.filter((item) => item.stock === 0).length,
         lowStock: inventoryData.filter((item) => item.stock > 0 && item.stock <= 10).length,
         totalStockValue: inventoryData.reduce(
@@ -346,28 +317,28 @@ class ReportsService {
           // Calculate stats
           const stats = {
             totalOrders: vendorOrders.length,
-            completedOrders: vendorOrders.filter((o) => o.status === 'delivered').length,
+            completedOrders: vendorOrders.filter((o) => o.status === 'completed').length,
             cancelledOrders: vendorOrders.filter((o) => o.status === 'cancelled').length,
             pendingOrders: vendorOrders.filter((o) =>
-              ['pending', 'confirmed', 'preparing', 'ready'].includes(o.status)
+              ['pending_payment', 'awaiting_assignment', 'assigned', 'vendor_accepted', 'in_progress'].includes(o.status)
             ).length,
-            totalRevenue: vendorOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0),
+            totalRevenue: vendorOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0),
             totalItems: vendorItems.length,
-            activeItems: vendorItems.filter((i) => i.isActive).length,
+            activeItems: vendorItems.filter((i) => i.isActive === 'true').length,
             outOfStockItems: vendorItems.filter((i) => i.stock === 0).length,
             averageOrderValue:
               vendorOrders.length > 0
-                ? vendorOrders.reduce((sum, o) => sum + parseFloat(o.totalAmount || 0), 0) / vendorOrders.length
+                ? vendorOrders.reduce((sum, o) => sum + parseFloat(o.total || 0), 0) / vendorOrders.length
                 : 0,
           };
 
           return {
             vendorId: vendor.id,
-            vendorName: vendor.businessName,
-            vendorPhone: vendor.phoneNumber,
-            vendorEmail: vendor.email,
-            vendorAddress: vendor.address,
-            isActive: vendor.isActive,
+            vendorName: vendor.storeName,
+            vendorPhone: vendor.phone,
+            ownerName: vendor.ownerName,
+            storeAddress: vendor.storeAddress,
+            status: vendor.status,
             ...stats,
           };
         })
@@ -375,7 +346,7 @@ class ReportsService {
 
       const summary = {
         totalVendors: vendorReports.length,
-        activeVendors: vendorReports.filter((v) => v.isActive).length,
+        activeVendors: vendorReports.filter((v) => v.status === 'approved').length,
         totalOrders: vendorReports.reduce((sum, v) => sum + v.totalOrders, 0),
         totalRevenue: vendorReports.reduce((sum, v) => sum + v.totalRevenue, 0),
         totalItems: vendorReports.reduce((sum, v) => sum + v.totalItems, 0),

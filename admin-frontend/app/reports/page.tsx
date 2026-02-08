@@ -155,11 +155,12 @@ export default function ReportsPage() {
                       <SelectValue placeholder="All statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="confirmed">Confirmed</SelectItem>
-                      <SelectItem value="preparing">Preparing</SelectItem>
-                      <SelectItem value="ready">Ready</SelectItem>
-                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="pending_payment">Pending Payment</SelectItem>
+                      <SelectItem value="awaiting_assignment">Awaiting Assignment</SelectItem>
+                      <SelectItem value="assigned">Assigned</SelectItem>
+                      <SelectItem value="vendor_accepted">Vendor Accepted</SelectItem>
+                      <SelectItem value="in_progress">In Progress</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                   </Select>
@@ -202,10 +203,10 @@ export default function ReportsPage() {
               </Card>
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Platform Fees</CardTitle>
+                  <CardTitle className="text-sm font-medium">Tax (GST)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">₹{data.summary.totalPlatformFees.toFixed(2)}</div>
+                  <div className="text-2xl font-bold">₹{data.summary.totalTax.toFixed(2)}</div>
                 </CardContent>
               </Card>
             </div>
@@ -242,13 +243,13 @@ export default function ReportsPage() {
                     ) : data?.orders && data.orders.length > 0 ? (
                       data.orders.slice(0, 20).map((order: any) => (
                         <TableRow key={order.id}>
-                          <TableCell className="font-mono text-sm">{order.orderNumber || order.id.substring(0, 8)}</TableCell>
+                          <TableCell className="font-mono text-sm">{order.orderId || order.id}</TableCell>
                           <TableCell>{order.userName || 'N/A'}</TableCell>
-                          <TableCell>{order.vendorName || 'N/A'}</TableCell>
+                          <TableCell>{order.vendorName || 'Unassigned'}</TableCell>
                           <TableCell>
-                            <Badge>{order.status}</Badge>
+                            <Badge>{order.status.replace('_', ' ')}</Badge>
                           </TableCell>
-                          <TableCell>₹{parseFloat(order.finalAmount || 0).toFixed(2)}</TableCell>
+                          <TableCell>₹{parseFloat(order.total || 0).toFixed(2)}</TableCell>
                           <TableCell>{format(new Date(order.createdAt), 'MMM dd, yyyy')}</TableCell>
                         </TableRow>
                       ))
