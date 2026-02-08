@@ -262,7 +262,7 @@ export default function UnitsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {units.map((unit) => (
+                    {units.map((unit: Unit) => (
                       <TableRow key={unit.id}>
                         <TableCell className="font-medium">{unit.name}</TableCell>
                         <TableCell>

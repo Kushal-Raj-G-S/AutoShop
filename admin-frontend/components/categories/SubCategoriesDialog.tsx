@@ -244,7 +244,7 @@ export function SubCategoriesDialog({
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {subCategories.map((subCategory) => (
+                        {subCategories.map((subCategory: SubCategory) => (
                           <TableRow key={subCategory.id}>
                             <TableCell className="font-medium">
                               {subCategory.name}
